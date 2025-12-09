@@ -346,8 +346,9 @@ Continuing to build upon this app I would add:
 - Business event calendar
 - Special offers/promotions section
 - Integration with Google Business API for automated updates
+- Business addition request page
 - Multiple language support (i18n)
-- Dark mode theme
+- Dark mode theme 
 - Business verification badges
 
 ## License
