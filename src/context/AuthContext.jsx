@@ -46,11 +46,11 @@ export const AuthProvider = ({ children }) => {
   const register = async (name, email, password) => {
     try {
       const response = await authAPI.register({ name, email, password });
-      const { token, user } = response.data;
+      const { token, user, recoveryPin } = response.data;
       localStorage.setItem('token', token);
       setToken(token);
       setUser(user);
-      return { success: true };
+      return { success: true, recoveryPin };
     } catch (error) {
       return {
         success: false,

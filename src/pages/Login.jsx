@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import RecoveryPinModal from '../components/RecoveryPinModal';
 import './Login.css';
 
 const Login = () => {
@@ -12,6 +13,8 @@ const Login = () => {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [recoveryPin, setRecoveryPin] = useState('');
   const { login, register } = useAuth();
   const navigate = useNavigate();
 
@@ -54,6 +57,13 @@ const Login = () => {
       }
 
       if (result.success) {
+        // Show recovery PIN modal for new registrations
+        if (!isLogin && result.recoveryPin) {
+          setRecoveryPin(result.recoveryPin);
+          setShowPinModal(true);
+          return; // Don't navigate yet, wait for modal close
+        }
+        
         // Redirect admin users to admin page
         const user = JSON.parse(atob(localStorage.getItem('token').split('.')[1]));
         if (user.isAdmin) {
@@ -71,8 +81,20 @@ const Login = () => {
     }
   };
 
+  const handlePinModalClose = () => {
+    setShowPinModal(false);
+    navigate('/'); // Navigate to home after closing PIN modal
+  };
+
   return (
     <div className="login-page">
+      {showPinModal && (
+        <RecoveryPinModal 
+          pin={recoveryPin} 
+          onClose={handlePinModalClose}
+        />
+      )}
+      
       <div className="login-container">
         <div className="login-box">
           <h1>{isLogin ? 'Welcome Back' : 'Create Account'}</h1>
@@ -136,6 +158,12 @@ const Login = () => {
               {loading ? 'Please wait...' : isLogin ? 'Login' : 'Register'}
             </button>
           </form>
+
+          {isLogin && (
+            <div className="forgot-password-link">
+              <Link to="/forgot-password">Forgot your password?</Link>
+            </div>
+          )}
 
           <div className="toggle-form">
             <p>

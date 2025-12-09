@@ -7,6 +7,7 @@ import BusinessDetail from './pages/BusinessDetail';
 import Login from './pages/Login';
 import Favorites from './pages/Favorites';
 import AdminPage from './pages/AdminPage';
+import ForgotPassword from './pages/ForgotPassword';
 import './App.css';
 
 function AppContent() {
@@ -23,6 +24,7 @@ function AppContent() {
           <Route path="/login" element={<Login />} />
           <Route path="/favorites" element={<Favorites />} />
           <Route path="/admin" element={<AdminPage />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
         </Routes>
       </main>
     </div>

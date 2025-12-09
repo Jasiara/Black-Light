@@ -10,6 +10,7 @@ export const createTables = async () => {
         password VARCHAR(255) NOT NULL,
         name VARCHAR(255) NOT NULL,
         is_admin BOOLEAN DEFAULT FALSE,
+        recovery_pin VARCHAR(6),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);

@@ -1,0 +1,148 @@
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.recovery-pin-modal .modal-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 1.5rem;
+  border-radius: 12px 12px 0 0;
+  text-align: center;
+}
+
+.recovery-pin-modal .modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.modal-body {
+  padding: 2rem;
+}
+
+.pin-display {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.pin-number {
+  font-size: 3rem;
+  font-weight: bold;
+  color: white;
+  letter-spacing: 0.5rem;
+  font-family: 'Courier New', monospace;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.important-notice {
+  background: #fff3cd;
+  border: 2px solid #ffc107;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.important-notice h3 {
+  margin-top: 0;
+  color: #856404;
+  font-size: 1.1rem;
+}
+
+.important-notice p {
+  color: #856404;
+  margin: 0.5rem 0;
+}
+
+.important-notice ul {
+  margin: 1rem 0;
+  padding-left: 1.5rem;
+}
+
+.important-notice li {
+  color: #856404;
+  margin: 0.5rem 0;
+  font-weight: 500;
+}
+
+.tech-note {
+  background: #e3f2fd;
+  border-left: 4px solid #2196F3;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+  color: #1565c0;
+  border-radius: 4px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  flex-direction: column;
+}
+
+.copy-btn,
+.close-btn {
+  padding: 1rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.copy-btn {
+  background: #e0e0e0;
+  color: #333;
+}
+
+.copy-btn:hover {
+  background: #d0d0d0;
+}
+
+.close-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.close-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+@media (max-width: 768px) {
+  .pin-number {
+    font-size: 2rem;
+    letter-spacing: 0.3rem;
+  }
+
+  .modal-body {
+    padding: 1.5rem;
+  }
+
+  .important-notice {
+    padding: 1rem;
+  }
+}
