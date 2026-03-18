@@ -57,6 +57,70 @@ router.get('/featured', async (req, res) => {
   }
 });
 
+// GET recommended businesses based on user interests (protected)
+router.get('/recommended/for-you', authenticateToken, async (req, res) => {
+  try {
+    const { limit = 6 } = req.query;
+    
+    // Get user with interests
+    const userResult = await pool.query(
+      'SELECT interests FROM users WHERE id = $1',
+      [req.user.id]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    let interests = userResult.rows[0].interests;
+    console.log('Raw interests from DB:', interests);
+    console.log('Interests type:', typeof interests);
+    
+    // Parse interests if it's a string (sometimes PostgreSQL returns strings)
+    if (typeof interests === 'string') {
+      try {
+        interests = JSON.parse(interests);
+      } catch (e) {
+        console.log('Failed to parse interests as JSON, treating as array');
+        interests = [];
+      }
+    }
+    
+    // Ensure interests is an array
+    if (!Array.isArray(interests)) {
+      interests = [];
+    }
+    
+    console.log('Parsed interests:', interests);
+    console.log('Interests array length:', interests.length);
+
+    // If user has no interests, return empty array
+    if (!interests || interests.length === 0) {
+      console.log('No interests found, returning empty array');
+      return res.json({ businesses: [], source: 'none' });
+    }
+
+    // First, let's see what categories exist in the database
+    const categoriesResult = await pool.query('SELECT DISTINCT category FROM businesses');
+    console.log('Available business categories in DB:', categoriesResult.rows.map(r => r.category));
+
+    // Match businesses by category with user interests - EXACT MATCH ONLY
+    console.log('Querying businesses with interests:', interests);
+    const result = await pool.query(
+      'SELECT * FROM businesses WHERE category = ANY($1) ORDER BY name LIMIT $2',
+      [interests, limit]
+    );
+    
+    console.log('Found matching businesses:', result.rows.length);
+    console.log('Matching businesses:', result.rows.map(b => ({ id: b.id, name: b.name, category: b.category })));
+
+    res.json({ businesses: result.rows, source: 'interests' });
+  } catch (error) {
+    console.error('Get recommended businesses error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // GET single business by ID
 router.get('/:id', async (req, res) => {
   try {

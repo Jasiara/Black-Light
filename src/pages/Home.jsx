@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { businessAPI } from '../services/api';
+import RecommendedForYou from '../components/RecommendedForYou';
 import './Home.css';
 
 const Home = () => {
@@ -11,7 +12,25 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const categories = ['All', 'Restaurant', 'Beauty', 'Retail', 'Services'];
+  const categories = [
+    'All',
+    'Food & Restaurants',
+    'Technology',
+    'Fashion & Clothing',
+    'Health & Wellness',
+    'Beauty & Hair',
+    'Real Estate',
+    'Entertainment',
+    'Automotive',
+    'Professional Services',
+    'Retail',
+    'Arts & Culture',
+    'Education',
+    'Home & Garden',
+    'Sports & Fitness',
+    'Travel & Tourism',
+    'Music'
+  ];
 
   useEffect(() => {
     loadFeaturedBusinesses();
@@ -80,6 +99,8 @@ const Home = () => {
           </form>
         </div>
       </section>
+
+      <RecommendedForYou />
 
       <section className="featured">
         <h2>✨ All Black-Owned Businesses</h2>

@@ -1,11 +1,14 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { authAPI } from '../services/api';
 import RecoveryPinModal from '../components/RecoveryPinModal';
+import SelectInterests from '../components/SelectInterests';
 import './Login.css';
 
 const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [showInterestsSelection, setShowInterestsSelection] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -57,11 +60,14 @@ const Login = () => {
       }
 
       if (result.success) {
-        // Show recovery PIN modal for new registrations
-        if (!isLogin && result.recoveryPin) {
-          setRecoveryPin(result.recoveryPin);
-          setShowPinModal(true);
-          return; // Don't navigate yet, wait for modal close
+        // Show interests selection for new registrations
+        if (!isLogin) {
+          // Store recovery PIN temporarily to show after interests selection
+          if (result.recoveryPin) {
+            localStorage.setItem('tempRecoveryPin', result.recoveryPin);
+          }
+          setShowInterestsSelection(true);
+          return;
         }
         
         // Redirect admin users to admin page
@@ -86,14 +92,52 @@ const Login = () => {
     navigate('/'); // Navigate to home after closing PIN modal
   };
 
+  const handleInterestsSelected = async (interests) => {
+    setLoading(true);
+    try {
+      // Update user interests via API
+      const response = await authAPI.updateInterests({ interests });
+      
+      if (response.data && response.data.user) {
+        // Show recovery PIN modal (there should be one stored from registration)
+        const storedPin = localStorage.getItem('tempRecoveryPin');
+        if (storedPin) {
+          setRecoveryPin(storedPin);
+          localStorage.removeItem('tempRecoveryPin');
+          setShowPinModal(true);
+          setShowInterestsSelection(false);
+          return;
+        }
+        
+        // If no PIN stored, redirect to home
+        navigate('/');
+        setShowInterestsSelection(false);
+      }
+    } catch (err) {
+      setError('Failed to save interests. Please try again.');
+      setShowInterestsSelection(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="login-page">
-      {showPinModal && (
-        <RecoveryPinModal 
-          pin={recoveryPin} 
-          onClose={handlePinModalClose}
+      {showInterestsSelection && (
+        <SelectInterests 
+          onSubmit={handleInterestsSelected}
+          loading={loading}
         />
       )}
+      
+      {!showInterestsSelection && (
+        <>
+          {showPinModal && (
+            <RecoveryPinModal 
+              pin={recoveryPin} 
+              onClose={handlePinModalClose}
+            />
+          )}
       
       <div className="login-container">
         <div className="login-box">
@@ -175,6 +219,8 @@ const Login = () => {
           </div>
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 };

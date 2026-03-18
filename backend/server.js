@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { createTables, seedDatabase } from './config/schema.js';
+import { addInterestsColumn } from './migrations/add_interests_column.js';
 
 // Import routes
 import authRoutes from './routes/auth.js';
@@ -23,6 +24,7 @@ app.use(express.urlencoded({ extended: true }));
 // Initialize database
 (async () => {
   await createTables();
+  await addInterestsColumn();
   await seedDatabase();
 })();
 

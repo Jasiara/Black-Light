@@ -41,7 +41,7 @@ router.post('/register', async (req, res) => {
 
     // Insert new user
     const result = await pool.query(
-      'INSERT INTO users (email, password, name, recovery_pin) VALUES ($1, $2, $3, $4) RETURNING id, email, name, is_admin, recovery_pin',
+      'INSERT INTO users (email, password, name, recovery_pin) VALUES ($1, $2, $3, $4) RETURNING id, email, name, is_admin, recovery_pin, interests',
       [email, hashedPassword, name, recoveryPin]
     );
 
@@ -56,7 +56,7 @@ router.post('/register', async (req, res) => {
 
     res.status(201).json({
       message: 'User registered successfully',
-      user: { id: user.id, email: user.email, name: user.name, isAdmin: user.is_admin },
+      user: { id: user.id, email: user.email, name: user.name, isAdmin: user.is_admin, interests: user.interests },
       token,
       recoveryPin: user.recovery_pin // TEMP: Remove when email system is implemented
     });
@@ -112,7 +112,7 @@ router.post('/login', async (req, res) => {
 router.get('/me', authenticateToken, async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT id, email, name, is_admin, created_at FROM users WHERE id = $1',
+      'SELECT id, email, name, is_admin, interests, created_at FROM users WHERE id = $1',
       [req.user.id]
     );
 
@@ -176,6 +176,43 @@ router.post('/forgot-password', async (req, res) => {
     });
   } catch (error) {
     console.error('Forgot password error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Update user interests (protected route)
+router.post('/interests', authenticateToken, async (req, res) => {
+  try {
+    const { interests } = req.body;
+
+    // Validate input
+    if (!interests || !Array.isArray(interests)) {
+      return res.status(400).json({ error: 'Interests must be an array' });
+    }
+
+    console.log('Updating interests for user:', req.user.id);
+    console.log('Interests to save:', interests);
+    console.log('Interests type:', typeof interests);
+    console.log('Interests as JSON:', JSON.stringify(interests));
+
+    // Update user interests
+    const result = await pool.query(
+      'UPDATE users SET interests = $1 WHERE id = $2 RETURNING id, email, name, is_admin, interests, created_at',
+      [JSON.stringify(interests), req.user.id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const user = result.rows[0];
+    console.log('Updated user interests in DB:', user.interests);
+    res.json({ 
+      message: 'Interests updated successfully',
+      user: { ...user, isAdmin: user.is_admin }
+    });
+  } catch (error) {
+    console.error('Update interests error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });

@@ -26,12 +26,14 @@ export const authAPI = {
   login: (data) => api.post('/auth/login', data),
   getCurrentUser: () => api.get('/auth/me'),
   forgotPassword: (data) => api.post('/auth/forgot-password', data),
+  updateInterests: (data) => api.post('/auth/interests', data),
 };
 
 // Business endpoints
 export const businessAPI = {
   getAll: (params) => api.get('/businesses', { params }),
   getFeatured: (limit = 3) => api.get('/businesses/featured', { params: { limit } }),
+  getRecommended: (params) => api.get('/businesses/recommended/for-you', { params }),
   getById: (id) => api.get(`/businesses/${id}`),
   create: (data) => api.post('/businesses', data),
   update: (id, data) => api.put(`/businesses/${id}`, data),

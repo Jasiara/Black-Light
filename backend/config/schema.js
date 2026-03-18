@@ -11,6 +11,7 @@ export const createTables = async () => {
         name VARCHAR(255) NOT NULL,
         is_admin BOOLEAN DEFAULT FALSE,
         recovery_pin VARCHAR(6),
+        interests JSONB DEFAULT '[]'::jsonb,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
@@ -80,7 +81,7 @@ export const seedDatabase = async () => {
     const sampleBusinesses = [
       {
         name: 'Soul Food Kitchen',
-        category: 'Restaurant',
+        category: 'Food & Restaurants',
         description: 'Authentic Southern soul food with a modern twist',
         address: '220 S Elm Street',
         city: 'Greensboro',
@@ -96,7 +97,7 @@ export const seedDatabase = async () => {
       },
       {
         name: 'Natural Hair Studio',
-        category: 'Beauty',
+        category: 'Beauty & Hair',
         description: 'Specializing in natural hair care and protective styles',
         address: '1624 Spring Garden Street',
         city: 'Greensboro',
@@ -111,7 +112,7 @@ export const seedDatabase = async () => {
       },
       {
         name: 'Black Books Boutique',
-        category: 'Retail',
+        category: 'Arts & Culture',
         description: 'Curated collection of books by Black authors',
         address: '345 S Battleground Avenue',
         city: 'Greensboro',
@@ -127,7 +128,7 @@ export const seedDatabase = async () => {
       },
       {
         name: 'Community Tech Solutions',
-        category: 'Services',
+        category: 'Technology',
         description: 'IT support and web development for small businesses',
         address: '1200 W Market Street',
         city: 'Greensboro',
@@ -143,7 +144,7 @@ export const seedDatabase = async () => {
       },
       {
         name: 'Unity Coffee House',
-        category: 'Restaurant',
+        category: 'Food & Restaurants',
         description: 'Artisan coffee and pastries in a welcoming atmosphere',
         address: '1004 Gate City Boulevard',
         city: 'Greensboro',
@@ -155,6 +156,101 @@ export const seedDatabase = async () => {
         latitude: 36.0603,
         longitude: -79.8168,
         image_url: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=400'
+      },
+      {
+        name: 'The Fit Collective',
+        category: 'Sports & Fitness',
+        description: 'Community fitness center with group classes and personal training',
+        address: '2500 Battleground Avenue',
+        city: 'Greensboro',
+        state: 'NC',
+        zip_code: '27408',
+        phone: '(336) 555-0106',
+        email: 'info@thefitcollective.com',
+        website: 'https://thefitcollective.com',
+        hours: JSON.stringify({ 'Mon-Fri': '6am-9pm', 'Sat-Sun': '8am-6pm' }),
+        latitude: 36.0550,
+        longitude: -79.7650,
+        image_url: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400'
+      },
+      {
+        name: 'Threads & Style',
+        category: 'Fashion & Clothing',
+        description: 'Boutique featuring Black designers and sustainable fashion',
+        address: '500 Elm Street',
+        city: 'Greensboro',
+        state: 'NC',
+        zip_code: '27401',
+        phone: '(336) 555-0107',
+        email: 'hello@threadsandstyle.com',
+        website: 'https://threadsandstyle.com',
+        hours: JSON.stringify({ 'Mon-Sat': '10am-8pm', 'Sun': '12pm-6pm' }),
+        latitude: 36.0744,
+        longitude: -79.7895,
+        image_url: 'https://images.unsplash.com/photo-1595777707802-21b287a26a83?w=400'
+      },
+      {
+        name: 'Wellness Haven',
+        category: 'Health & Wellness',
+        description: 'Holistic health center offering massage, acupuncture, and wellness coaching',
+        address: '1800 Spring Garden Street',
+        city: 'Greensboro',
+        state: 'NC',
+        zip_code: '27403',
+        phone: '(336) 555-0108',
+        email: 'book@wellnesshaven.com',
+        website: 'https://wellnesshaven.com',
+        hours: JSON.stringify({ 'Tue-Sat': '9am-7pm' }),
+        latitude: 36.0850,
+        longitude: -79.8180,
+        image_url: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400'
+      },
+      {
+        name: 'Harmony Music Studio',
+        category: 'Music',
+        description: 'Music lessons and recording studio for all skill levels',
+        address: '1050 North Street',
+        city: 'Greensboro',
+        state: 'NC',
+        zip_code: '27401',
+        phone: '(336) 555-0109',
+        email: 'hello@harmonymusicstudio.com',
+        website: 'https://harmonymusicstudio.com',
+        hours: JSON.stringify({ 'Mon-Fri': '2pm-9pm', 'Sat': '10am-5pm' }),
+        latitude: 36.0900,
+        longitude: -79.7800,
+        image_url: 'https://images.unsplash.com/photo-1511379938547-c1f69b13d835?w=400'
+      },
+      {
+        name: 'Wanderlust Travel Agency',
+        category: 'Travel & Tourism',
+        description: 'Personalized travel planning with cultural tourism experiences',
+        address: '800 W Main Street',
+        city: 'Greensboro',
+        state: 'NC',
+        zip_code: '27407',
+        phone: '(336) 555-0110',
+        email: 'adventures@wanderlusttravel.com',
+        website: 'https://wanderlusttravel.com',
+        hours: JSON.stringify({ 'Mon-Fri': '9am-6pm', 'Sat': '10am-3pm' }),
+        latitude: 36.0685,
+        longitude: -79.8050,
+        image_url: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400'
+      },
+      {
+        name: 'Education First Tutoring',
+        category: 'Education',
+        description: 'Personalized tutoring and test preparation for students',
+        address: '1350 N Elm Street',
+        city: 'Greensboro',
+        state: 'NC',
+        zip_code: '27401',
+        phone: '(336) 555-0111',
+        email: 'info@educationfirst.com',
+        hours: JSON.stringify({ 'Mon-Thu': '3pm-8pm', 'Sat': '10am-4pm' }),
+        latitude: 36.0950,
+        longitude: -79.7750,
+        image_url: 'https://images.unsplash.com/photo-1427504494785-cdfa2d005d4a?w=400'
       }
     ];
 
