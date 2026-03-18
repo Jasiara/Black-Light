@@ -187,7 +187,7 @@ export const seedDatabase = async () => {
         hours: JSON.stringify({ 'Mon-Sat': '10am-8pm', 'Sun': '12pm-6pm' }),
         latitude: 36.0744,
         longitude: -79.7895,
-        image_url: 'https://images.unsplash.com/photo-1595777707802-21b287a26a83?w=400'
+        image_url: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQFAogq6HYYHJcpG3NKfFU7FPj6VDz8Br5_UQ&s'
       },
       {
         name: 'Wellness Haven',
@@ -219,7 +219,7 @@ export const seedDatabase = async () => {
         hours: JSON.stringify({ 'Mon-Fri': '2pm-9pm', 'Sat': '10am-5pm' }),
         latitude: 36.0900,
         longitude: -79.7800,
-        image_url: 'https://images.unsplash.com/photo-1511379938547-c1f69b13d835?w=400'
+        image_url: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=400'
       },
       {
         name: 'Wanderlust Travel Agency',
@@ -250,7 +250,7 @@ export const seedDatabase = async () => {
         hours: JSON.stringify({ 'Mon-Thu': '3pm-8pm', 'Sat': '10am-4pm' }),
         latitude: 36.0950,
         longitude: -79.7750,
-        image_url: 'https://images.unsplash.com/photo-1427504494785-cdfa2d005d4a?w=400'
+        image_url: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZhTDnXHAfuCHYOLs-ixeu4UU4KkIKEPndmA&s'
       }
     ];
 
