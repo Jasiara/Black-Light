@@ -138,6 +138,17 @@ const BusinessDetail = () => {
               <p>{business.description}</p>
             </section>
 
+            {business.community_tags && business.community_tags.length > 0 && (
+              <section className="info-section">
+                <h2>Community Tags</h2>
+                <div className="detail-tags">
+                  {business.community_tags.map((tag, idx) => (
+                    <span key={idx} className="detail-tag">{tag}</span>
+                  ))}
+                </div>
+              </section>
+            )}
+
             <section className="info-section">
               <h2>Contact Information</h2>
               <p>📍 {business.address}</p>

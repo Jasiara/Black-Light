@@ -41,7 +41,7 @@ router.post('/register', async (req, res) => {
 
     // Insert new user
     const result = await pool.query(
-      'INSERT INTO users (email, password, name, recovery_pin) VALUES ($1, $2, $3, $4) RETURNING id, email, name, is_admin, recovery_pin, interests',
+      'INSERT INTO users (email, password, name, recovery_pin) VALUES ($1, $2, $3, $4) RETURNING id, email, name, is_admin, user_type, recovery_pin, interests',
       [email, hashedPassword, name, recoveryPin]
     );
 
@@ -49,19 +49,78 @@ router.post('/register', async (req, res) => {
 
     // Generate JWT token
     const token = jwt.sign(
-      { id: user.id, email: user.email, isAdmin: user.is_admin },
+      { id: user.id, email: user.email, isAdmin: user.is_admin, userType: user.user_type },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
 
     res.status(201).json({
       message: 'User registered successfully',
-      user: { id: user.id, email: user.email, name: user.name, isAdmin: user.is_admin, interests: user.interests },
+      user: { id: user.id, email: user.email, name: user.name, isAdmin: user.is_admin, userType: user.user_type, interests: user.interests },
       token,
       recoveryPin: user.recovery_pin // TEMP: Remove when email system is implemented
     });
   } catch (error) {
     console.error('Register error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Register new business owner
+router.post('/register-business', async (req, res) => {
+  try {
+    const { email, password, name, businessName } = req.body;
+
+    // Validate input
+    if (!email || !password || !name || !businessName) {
+      return res.status(400).json({ error: 'All fields are required' });
+    }
+
+    // Validate password requirements
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters long' });
+    }
+    
+    if (!/\d/.test(password)) {
+      return res.status(400).json({ error: 'Password must include at least one number' });
+    }
+
+    // Check if user already exists
+    const userCheck = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    if (userCheck.rows.length > 0) {
+      return res.status(400).json({ error: 'User already exists' });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Generate 6-digit recovery PIN
+    const recoveryPin = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Insert new business owner user
+    const result = await pool.query(
+      'INSERT INTO users (email, password, name, user_type, recovery_pin) VALUES ($1, $2, $3, $4, $5) RETURNING id, email, name, user_type, is_admin, recovery_pin, interests',
+      [email, hashedPassword, name, 'business_owner', recoveryPin]
+    );
+
+    const user = result.rows[0];
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { id: user.id, email: user.email, isAdmin: user.is_admin, userType: user.user_type },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    res.status(201).json({
+      message: 'Business account created successfully',
+      user: { id: user.id, email: user.email, name: user.name, userType: user.user_type, isAdmin: user.is_admin, interests: user.interests },
+      token,
+      recoveryPin: user.recovery_pin, // TEMP: Remove when email system is implemented
+      businessName
+    });
+  } catch (error) {
+    console.error('Business register error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -92,14 +151,14 @@ router.post('/login', async (req, res) => {
 
     // Generate JWT token
     const token = jwt.sign(
-      { id: user.id, email: user.email, isAdmin: user.is_admin },
+      { id: user.id, email: user.email, isAdmin: user.is_admin, userType: user.user_type },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
 
     res.json({
       message: 'Login successful',
-      user: { id: user.id, email: user.email, name: user.name, isAdmin: user.is_admin },
+      user: { id: user.id, email: user.email, name: user.name, isAdmin: user.is_admin, userType: user.user_type },
       token
     });
   } catch (error) {
@@ -112,7 +171,7 @@ router.post('/login', async (req, res) => {
 router.get('/me', authenticateToken, async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT id, email, name, is_admin, interests, created_at FROM users WHERE id = $1',
+      'SELECT id, email, name, is_admin, user_type, interests, created_at FROM users WHERE id = $1',
       [req.user.id]
     );
 
@@ -121,7 +180,7 @@ router.get('/me', authenticateToken, async (req, res) => {
     }
 
     const user = result.rows[0];
-    res.json({ user: { ...user, isAdmin: user.is_admin } });
+    res.json({ user: { ...user, isAdmin: user.is_admin, userType: user.user_type } });
   } catch (error) {
     console.error('Get user error:', error);
     res.status(500).json({ error: 'Server error' });

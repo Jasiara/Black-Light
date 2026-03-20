@@ -1,0 +1,32 @@
+.dashboard-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.welcome-section,
+.overview-section,
+.insights-section,
+.messages-section,
+.growth-section,
+.community-section {
+  /* Sections handled by their component CSS */
+}
+
+.promotions-reviews-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 2rem;
+}
+
+@media (max-width: 1024px) {
+  .promotions-reviews-section {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-main {
+    gap: 1.5rem;
+  }
+}

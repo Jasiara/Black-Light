@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { businessAPI } from '../services/api';
 import RecommendedForYou from '../components/RecommendedForYou';
 import './Home.css';
@@ -11,6 +12,7 @@ const Home = () => {
   const [location, setLocation] = useState('');
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const categories = [
     'All',
@@ -62,6 +64,23 @@ const Home = () => {
 
   return (
     <div className="home">
+      {user && user.userType === 'business_owner' && (
+        <section className="business-banner">
+          <div className="banner-content">
+            <div className="banner-text">
+              <h3>Welcome back, {user.name}! 👋</h3>
+              <p><strong>Access your business dashboard to manage your listings, promotions, and reviews.</strong></p>
+            </div>
+            <button 
+              className="banner-button"
+              onClick={() => navigate('/business-dashboard')}
+            >
+              💼 Go to Dashboard
+            </button>
+          </div>
+        </section>
+      )}
+
       <section className="hero">
         <div className="hero-content">
           <h1>Discover & Support Black-Owned Businesses</h1>
@@ -103,33 +122,54 @@ const Home = () => {
       <RecommendedForYou />
 
       <section className="featured">
-        <h2>✨ All Black-Owned Businesses</h2>
+        <h2>✨ Featured Black-Owned Businesses</h2>
         {loading ? (
           <p>Loading...</p>
         ) : (
-          <div className="featured-grid">
-            {featuredBusinesses.map((business) => (
-              <div
-                key={business.id}
-                className="business-card"
-                onClick={() => navigate(`/business/${business.id}`)}
-              >
-                <img
-                  src={business.image_url || 'https://via.placeholder.com/400x300'}
-                  alt={business.name}
-                  className="business-image"
-                />
-                <div className="business-info">
-                  <h3>{business.name}</h3>
-                  <p className="category">{business.category}</p>
-                  <p className="description">{business.description}</p>
-                  <p className="location">
-                    📍 {business.city}, {business.state}
-                  </p>
+          <>
+            <div className="featured-grid">
+              {featuredBusinesses.slice(0, 9).map((business) => (
+                <div
+                  key={business.id}
+                  className="business-card"
+                  onClick={() => navigate(`/business/${business.id}`)}
+                >
+                  <img
+                    src={business.image_url || 'https://via.placeholder.com/400x300'}
+                    alt={business.name}
+                    className="business-image"
+                  />
+                  <div className="business-info">
+                    <h3>{business.name}</h3>
+                    <div className="category-tags-row">
+                      <p className="category">{business.category}</p>
+                      {business.community_tags && business.community_tags.length > 0 && (
+                        <div className="community-tags">
+                          {business.community_tags.map((tag, idx) => (
+                            <span key={idx} className="tag">{tag}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <p className="description">{business.description}</p>
+                    <p className="location">
+                      📍 {business.city}, {business.state}
+                    </p>
+                  </div>
                 </div>
+              ))}
+            </div>
+            {featuredBusinesses.length > 9 && (
+              <div className="explore-more-container">
+                <button 
+                  className="explore-more-btn"
+                  onClick={() => navigate('/search')}
+                >
+                  Explore More Nearby
+                </button>
               </div>
-            ))}
-          </div>
+            )}
+          </>
         )}
       </section>
     </div>

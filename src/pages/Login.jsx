@@ -4,15 +4,19 @@ import { useAuth } from '../context/AuthContext';
 import { authAPI } from '../services/api';
 import RecoveryPinModal from '../components/RecoveryPinModal';
 import SelectInterests from '../components/SelectInterests';
+import BusinessDetailsForm from '../components/BusinessDetailsForm';
 import './Login.css';
 
 const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [isBusinessMode, setIsBusinessMode] = useState(false);
   const [showInterestsSelection, setShowInterestsSelection] = useState(false);
+  const [showBusinessDetailsForm, setShowBusinessDetailsForm] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
+    businessName: '',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -42,6 +46,10 @@ const Login = () => {
         setError('Password must include at least one number');
         return;
       }
+      if (isBusinessMode && !formData.businessName) {
+        setError('Business name is required');
+        return;
+      }
     }
 
     setLoading(true);
@@ -56,6 +64,30 @@ const Login = () => {
           setLoading(false);
           return;
         }
+        
+        // Business registration
+        if (isBusinessMode) {
+          const response = await authAPI.registerBusiness({
+            name: formData.name,
+            email: formData.email,
+            password: formData.password,
+            businessName: formData.businessName,
+          });
+          
+          if (response.data && response.data.token) {
+            localStorage.setItem('token', response.data.token);
+            setRecoveryPin(response.data.recoveryPin);
+            setShowPinModal(true);
+            setLoading(false);
+            return;
+          } else {
+            setError(response.data?.error || 'Registration failed');
+            setLoading(false);
+            return;
+          }
+        }
+        
+        // Regular customer registration
         result = await register(formData.name, formData.email, formData.password);
       }
 
@@ -70,10 +102,12 @@ const Login = () => {
           return;
         }
         
-        // Redirect admin users to admin page
+        // Redirect based on user type
         const user = JSON.parse(atob(localStorage.getItem('token').split('.')[1]));
         if (user.isAdmin) {
           navigate('/admin');
+        } else if (user.userType === 'business_owner') {
+          navigate('/business-dashboard');
         } else {
           navigate('/');
         }
@@ -89,7 +123,17 @@ const Login = () => {
 
   const handlePinModalClose = () => {
     setShowPinModal(false);
-    navigate('/'); // Navigate to home after closing PIN modal
+    try {
+      const user = JSON.parse(atob(localStorage.getItem('token').split('.')[1]));
+      if (user.userType === 'business_owner') {
+        // Show business details form instead of navigating to dashboard
+        setShowBusinessDetailsForm(true);
+      } else {
+        navigate('/');
+      }
+    } catch (err) {
+      navigate('/');
+    }
   };
 
   const handleInterestsSelected = async (interests) => {
@@ -121,6 +165,14 @@ const Login = () => {
     }
   };
 
+  const handleBusinessDetailsSubmit = (business) => {
+    // Business created successfully
+    console.log('Business created:', business);
+    setShowBusinessDetailsForm(false);
+    // Navigate to business dashboard
+    navigate('/business-dashboard');
+  };
+
   return (
     <div className="login-page">
       {showInterestsSelection && (
@@ -130,7 +182,14 @@ const Login = () => {
         />
       )}
       
-      {!showInterestsSelection && (
+      {showBusinessDetailsForm && (
+        <BusinessDetailsForm 
+          onSuccess={handleBusinessDetailsSubmit}
+          loading={loading}
+        />
+      )}
+      
+      {!showInterestsSelection && !showBusinessDetailsForm && (
         <>
           {showPinModal && (
             <RecoveryPinModal 
@@ -141,10 +200,12 @@ const Login = () => {
       
       <div className="login-container">
         <div className="login-box">
-          <h1>{isLogin ? 'Welcome Back' : 'Create Account'}</h1>
+          <h1>{isLogin ? 'Welcome Back' : isBusinessMode ? 'Add Your Business' : 'Create Account'}</h1>
           <p className="login-subtitle">
             {isLogin
               ? 'Login to save favorites and write reviews'
+              : isBusinessMode
+              ? 'Register your business and connect with customers'
               : 'Join us to discover Black-owned businesses'}
           </p>
 
@@ -153,7 +214,7 @@ const Login = () => {
           <form onSubmit={handleSubmit}>
             {!isLogin && (
               <div className="form-group">
-                <label htmlFor="name">Name</label>
+                <label htmlFor="name">{isBusinessMode ? 'Owner Name' : 'Name'}</label>
                 <input
                   type="text"
                   id="name"
@@ -161,7 +222,22 @@ const Login = () => {
                   value={formData.name}
                   onChange={handleChange}
                   required={!isLogin}
-                  placeholder="Enter your name"
+                  placeholder={isBusinessMode ? "Enter your name" : "Enter your name"}
+                />
+              </div>
+            )}
+
+            {!isLogin && isBusinessMode && (
+              <div className="form-group">
+                <label htmlFor="businessName">Business Name</label>
+                <input
+                  type="text"
+                  id="businessName"
+                  name="businessName"
+                  value={formData.businessName}
+                  onChange={handleChange}
+                  required={isBusinessMode && !isLogin}
+                  placeholder="Enter your business name"
                 />
               </div>
             )}
@@ -199,7 +275,7 @@ const Login = () => {
             </div>
 
             <button type="submit" className="submit-button" disabled={loading}>
-              {loading ? 'Please wait...' : isLogin ? 'Login' : 'Register'}
+              {loading ? 'Please wait...' : isLogin ? 'Login' : isBusinessMode ? 'Create Business Account' : 'Register'}
             </button>
           </form>
 
@@ -212,10 +288,46 @@ const Login = () => {
           <div className="toggle-form">
             <p>
               {isLogin ? "Don't have an account? " : 'Already have an account? '}
-              <button onClick={() => setIsLogin(!isLogin)} className="toggle-button">
+              <button 
+                onClick={() => {
+                  setIsLogin(!isLogin);
+                  setIsBusinessMode(false);
+                  setError('');
+                }} 
+                className="toggle-button"
+              >
                 {isLogin ? 'Register' : 'Login'}
               </button>
             </p>
+            {isLogin && (
+              <p>
+                {"Want to add your business? "}
+                <button 
+                  onClick={() => {
+                    setIsLogin(false);
+                    setIsBusinessMode(true);
+                    setError('');
+                  }} 
+                  className="toggle-button"
+                >
+                  Add your business
+                </button>
+              </p>
+            )}
+            {!isLogin && isBusinessMode && (
+              <p>
+                {"Looking to create a customer account? "}
+                <button 
+                  onClick={() => {
+                    setIsBusinessMode(false);
+                    setError('');
+                  }} 
+                  className="toggle-button"
+                >
+                  Register as customer
+                </button>
+              </p>
+            )}
           </div>
         </div>
       </div>

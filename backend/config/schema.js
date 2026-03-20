@@ -9,6 +9,7 @@ export const createTables = async () => {
         email VARCHAR(255) UNIQUE NOT NULL,
         password VARCHAR(255) NOT NULL,
         name VARCHAR(255) NOT NULL,
+        user_type VARCHAR(50) DEFAULT 'customer',
         is_admin BOOLEAN DEFAULT FALSE,
         recovery_pin VARCHAR(6),
         interests JSONB DEFAULT '[]'::jsonb,
@@ -20,6 +21,7 @@ export const createTables = async () => {
     await pool.query(`
       CREATE TABLE IF NOT EXISTS businesses (
         id SERIAL PRIMARY KEY,
+        business_owner_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
         name VARCHAR(255) NOT NULL,
         category VARCHAR(100) NOT NULL,
         description TEXT,
@@ -70,12 +72,10 @@ export const createTables = async () => {
 
 export const seedDatabase = async () => {
   try {
-    // Check if businesses already exist
-    const result = await pool.query('SELECT COUNT(*) FROM businesses');
-    if (result.rows[0].count > 0) {
-      console.log('Database already seeded');
-      return;
-    }
+    // Clear existing data to reseed
+    await pool.query('TRUNCATE TABLE favorites CASCADE');
+    await pool.query('TRUNCATE TABLE reviews CASCADE');
+    await pool.query('TRUNCATE TABLE businesses CASCADE');
 
     // Seed sample businesses
     const sampleBusinesses = [
@@ -93,7 +93,8 @@ export const seedDatabase = async () => {
         hours: JSON.stringify({ 'Wed-Sun': '12pm-9pm', 'Mon-Tue': 'Closed' }),
         latitude: 36.0726,
         longitude: -79.7912,
-        image_url: 'https://images.getbento.com/accounts/5e2117ff0786fd83b402ab9526b6eeaa/media/images/95111Main_Logo.png?w=1200&fit=fill&auto=compress,format&cs=origin&h=600&bg=1C194F&pad=100'
+        image_url: 'https://images.getbento.com/accounts/5e2117ff0786fd83b402ab9526b6eeaa/media/images/95111Main_Logo.png?w=1200&fit=fill&auto=compress,format&cs=origin&h=600&bg=1C194F&pad=100',
+        community_tags: JSON.stringify(['Family-Owned'])
       },
          {
     name: "Funderburk's Cafe & Catering",
@@ -109,7 +110,8 @@ export const seedDatabase = async () => {
     hours: JSON.stringify({ "Mon-Sat": "11am-8pm", "Sun": "Closed" }),
     latitude: 36.0627,
     longitude: -79.7910,
-    image_url: "https://menufyproduction.imgix.net/637237694873603286+191868.png?auto=compress,format&h=1080&w=1920&fit=max"
+    image_url: "https://menufyproduction.imgix.net/637237694873603286+191868.png?auto=compress,format&h=1080&w=1920&fit=max",
+    community_tags: JSON.stringify(['Family-Owned'])
   },
   {
     name: "Kim's Kafe",
@@ -125,7 +127,8 @@ export const seedDatabase = async () => {
     hours: JSON.stringify({ "Tue-Sat": "11am-7pm", "Sun-Mon": "Closed" }),
     latitude: 36.0992,
     longitude: -79.7623,
-    image_url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQLDGam_ZVPEzCIyyJRoRzyry4l8Q5UmftC3w&s"
+    image_url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQLDGam_ZVPEzCIyyJRoRzyry4l8Q5UmftC3w&s",
+    community_tags: JSON.stringify(['Family-Owned', 'Kid-Friendly'])
   },
   {
     name: "Cure Waterless Nail Spa",
@@ -141,7 +144,8 @@ export const seedDatabase = async () => {
     hours: JSON.stringify({ "Mon-Sat": "10am-7pm", "Sun": "Closed" }),
     latitude: 36.0865,
     longitude: -79.8065,
-    image_url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHW5yIJfhD9Q9oMUQ9Jc00Cx3ZtAOxty1VDw&s"
+    image_url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHW5yIJfhD9Q9oMUQ9Jc00Cx3ZtAOxty1VDw&s",
+    community_tags: JSON.stringify(['Women-Owned'])
   },
   {
     name: "Madd Fitness Studio",
@@ -157,7 +161,8 @@ export const seedDatabase = async () => {
     hours: JSON.stringify({ "Mon-Fri": "6am-8pm", "Sat": "8am-12pm", "Sun": "Closed" }),
     latitude: 36.1301,
     longitude: -79.8003,
-    image_url: "https://cdn.prod.website-files.com/68f79419afd4ee91b277a5f0/68fb9fb230c41aba0c1aeffd_Homepage%20at%20MaddFitness%20Studio.webp"
+    image_url: "https://cdn.prod.website-files.com/68f79419afd4ee91b277a5f0/68fb9fb230c41aba0c1aeffd_Homepage%20at%20MaddFitness%20Studio.webp",
+    community_tags: JSON.stringify(['New Business', 'Kid-Friendly'])
   },
   {
     name: "Songbirds Bridal & Consignment",
@@ -173,23 +178,8 @@ export const seedDatabase = async () => {
     hours: JSON.stringify({ "Tue-Sat": "11am-6pm", "Sun-Mon": "Closed" }),
     latitude: 36.1189,
     longitude: -79.8790,
-    image_url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTGQHRnQ8Iw4WoKvEVpASUKZezcLtVftToNNw&s"
-  },
-  {
-    name: "Triad Black Chamber of Commerce",
-    category: "Professional Services",
-    description: "Organization supporting Black-owned businesses and economic development",
-    address: "200 N Davie St",
-    city: "Greensboro",
-    state: "NC",
-    zip_code: "27401",
-    phone: "(336) 379-5000",
-    email: "info@triadblackchamber.com",
-    website: "https://www.triadblackchamber.com",
-    hours: JSON.stringify({ "Mon-Fri": "9am-5pm", "Sat-Sun": "Closed" }),
-    latitude: 36.0742,
-    longitude: -79.7920,
-    image_url: "https://via.placeholder.com/1200x600.png?text=Triad+Black+Chamber"
+    image_url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTGQHRnQ8Iw4WoKvEVpASUKZezcLtVftToNNw&s",
+    community_tags: JSON.stringify(['Women-Owned'])
   },
   {
     name: "Bump Baby Bliss",
@@ -205,7 +195,8 @@ export const seedDatabase = async () => {
     hours: JSON.stringify({ "Mon-Fri": "9am-6pm", "Sat": "By Appointment", "Sun": "Closed" }),
     latitude: 36.0859,
     longitude: -79.7765,
-    image_url: "https://static.wixstatic.com/media/3cdcf3_7951d1e6c6ff485d9b5df0e32c569d2b~mv2.jpg/v1/fill/w_2158,h_1257,al_c/3cdcf3_7951d1e6c6ff485d9b5df0e32c569d2b~mv2.jpg"
+    image_url: "https://static.wixstatic.com/media/3cdcf3_7951d1e6c6ff485d9b5df0e32c569d2b~mv2.jpg/v1/fill/w_2158,h_1257,al_c/3cdcf3_7951d1e6c6ff485d9b5df0e32c569d2b~mv2.jpg",
+    community_tags: JSON.stringify(['Women-Owned', 'Kid-Friendly'])
   },
       {
         name: 'Natural Hair Studio',
@@ -220,7 +211,8 @@ export const seedDatabase = async () => {
         hours: JSON.stringify({ 'Tue-Sat': '9am-6pm' }),
         latitude: 36.0805,
         longitude: -79.8146,
-        image_url: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400'
+        image_url: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400',
+        community_tags: JSON.stringify(['Women-Owned'])
       },
       {
         name: 'Black Books Boutique',
@@ -236,7 +228,8 @@ export const seedDatabase = async () => {
         hours: JSON.stringify({ 'Mon-Sat': '10am-7pm', 'Sun': '12pm-5pm' }),
         latitude: 36.0655,
         longitude: -79.7705,
-        image_url: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400'
+        image_url: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400',
+        community_tags: JSON.stringify(['Kid-Friendly'])
       },
       {
         name: 'Community Tech Solutions',
@@ -252,7 +245,8 @@ export const seedDatabase = async () => {
         hours: JSON.stringify({ 'Mon-Fri': '9am-5pm' }),
         latitude: 36.0783,
         longitude: -79.8086,
-        image_url: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=400'
+        image_url: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=400',
+        community_tags: JSON.stringify(['New Business'])
       },
       {
         name: 'Unity Coffee House',
@@ -267,7 +261,8 @@ export const seedDatabase = async () => {
         hours: JSON.stringify({ 'Daily': '7am-8pm' }),
         latitude: 36.0603,
         longitude: -79.8168,
-        image_url: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=400'
+        image_url: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=400',
+        community_tags: JSON.stringify(['Family-Owned', 'Kid-Friendly'])
       },
       {
         name: 'The Fit Collective',
@@ -283,7 +278,8 @@ export const seedDatabase = async () => {
         hours: JSON.stringify({ 'Mon-Fri': '6am-9pm', 'Sat-Sun': '8am-6pm' }),
         latitude: 36.0550,
         longitude: -79.7650,
-        image_url: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400'
+        image_url: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400',
+        community_tags: JSON.stringify(['Kid-Friendly', 'Family-Owned'])
       },
       {
         name: 'Threads & Style',
@@ -299,7 +295,8 @@ export const seedDatabase = async () => {
         hours: JSON.stringify({ 'Mon-Sat': '10am-8pm', 'Sun': '12pm-6pm' }),
         latitude: 36.0744,
         longitude: -79.7895,
-        image_url: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQFAogq6HYYHJcpG3NKfFU7FPj6VDz8Br5_UQ&s'
+        image_url: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQFAogq6HYYHJcpG3NKfFU7FPj6VDz8Br5_UQ&s',
+        community_tags: JSON.stringify(['Women-Owned', 'New Business'])
       },
       {
         name: 'Wellness Haven',
@@ -315,7 +312,8 @@ export const seedDatabase = async () => {
         hours: JSON.stringify({ 'Tue-Sat': '9am-7pm' }),
         latitude: 36.0850,
         longitude: -79.8180,
-        image_url: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400'
+        image_url: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400',
+        community_tags: JSON.stringify(['LGBTQ-Owned'])
       },
       {
         name: 'Harmony Music Studio',
@@ -331,7 +329,8 @@ export const seedDatabase = async () => {
         hours: JSON.stringify({ 'Mon-Fri': '2pm-9pm', 'Sat': '10am-5pm' }),
         latitude: 36.0900,
         longitude: -79.7800,
-        image_url: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=400'
+        image_url: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=400',
+        community_tags: JSON.stringify(['New Business', 'Kid-Friendly'])
       },
       {
         name: 'Wanderlust Travel Agency',
@@ -347,7 +346,8 @@ export const seedDatabase = async () => {
         hours: JSON.stringify({ 'Mon-Fri': '9am-6pm', 'Sat': '10am-3pm' }),
         latitude: 36.0685,
         longitude: -79.8050,
-        image_url: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400'
+        image_url: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400',
+        community_tags: JSON.stringify(['Vegan-Friendly'])
       },
       {
         name: 'Education First Tutoring',
@@ -362,14 +362,15 @@ export const seedDatabase = async () => {
         hours: JSON.stringify({ 'Mon-Thu': '3pm-8pm', 'Sat': '10am-4pm' }),
         latitude: 36.0950,
         longitude: -79.7750,
-        image_url: 'https://images.unsplash.com/photo-1427504494785-cdfa056f9b10?w=400'
+        image_url: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTzcf_aWeQarKFcmfAVyKrZ3pDz94_m_8qTZw&s',
+        community_tags: JSON.stringify(['Kid-Friendly', 'Family-Owned'])
       }
     ];
 
     for (const business of sampleBusinesses) {
       await pool.query(
-        `INSERT INTO businesses (name, category, description, address, city, state, zip_code, phone, email, website, hours, latitude, longitude, image_url)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
+        `INSERT INTO businesses (name, category, description, address, city, state, zip_code, phone, email, website, hours, latitude, longitude, image_url, community_tags)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
         [
           business.name,
           business.category,
@@ -384,7 +385,8 @@ export const seedDatabase = async () => {
           business.hours,
           business.latitude,
           business.longitude,
-          business.image_url
+          business.image_url,
+          business.community_tags || JSON.stringify([])
         ]
       );
     }

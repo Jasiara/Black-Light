@@ -3,6 +3,9 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { createTables, seedDatabase } from './config/schema.js';
 import { addInterestsColumn } from './migrations/add_interests_column.js';
+import addUserTypeColumn from './migrations/add_user_type_column.js';
+import addBusinessOwnerIdColumn from './migrations/add_business_owner_id_column.js';
+import addCommunityTagsColumn from './migrations/add_community_tags_column.js';
 
 // Import routes
 import authRoutes from './routes/auth.js';
@@ -25,6 +28,9 @@ app.use(express.urlencoded({ extended: true }));
 (async () => {
   await createTables();
   await addInterestsColumn();
+  await addUserTypeColumn();
+  await addBusinessOwnerIdColumn();
+  await addCommunityTagsColumn();
   await seedDatabase();
 })();
 
