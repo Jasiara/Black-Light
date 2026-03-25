@@ -10,7 +10,7 @@ const Footer = () => {
         <div className="footer-content">
           {/* Brand Section */}
           <div className="footer-section">
-            <h3 className="footer-brand">Black-Light</h3>
+            <h3 className="footer-brand">Black Light</h3>
             <p className="footer-tagline">Discover and support Black-owned businesses in your community.</p>
             <div className="social-links">
               <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="social-icon">
@@ -54,7 +54,7 @@ const Footer = () => {
           <div className="footer-section">
             <h4>Company</h4>
             <ul>
-              <li><a href="#about">About Us</a></li>
+              <li><Link to="/about">About Us</Link></li>
               <li><a href="#contact">Contact</a></li>
               <li><a href="#privacy">Privacy Policy</a></li>
               <li><a href="#terms">Terms of Service</a></li>
@@ -78,7 +78,7 @@ const Footer = () => {
 
         {/* Footer Bottom */}
         <div className="footer-bottom">
-          <p>&copy; {currentYear} Black-Light. All rights reserved. Empowering Black-owned businesses.</p>
+          <p>&copy; {currentYear} Black Light. All rights reserved. Empowering Black-owned businesses.</p>
         </div>
       </div>
     </footer>

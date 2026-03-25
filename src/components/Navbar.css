@@ -1,4 +1,9 @@
 .navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
   background-color: #1a1a1a;
   padding: 1rem 2rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -13,10 +18,20 @@
 }
 
 .nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 1.5rem;
   font-weight: bold;
   color: #ffd700;
   text-decoration: none;
+}
+
+.nav-logo-stars {
+  width: 40px;
+  height: 30px;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.5));
 }
 
 .nav-menu {
@@ -26,13 +41,23 @@
 }
 
 .nav-link {
-  color: #fff;
+  color: #ccc;
   text-decoration: none;
-  transition: color 0.3s;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding-bottom: 3px;
+  border-bottom: 2px solid transparent;
 }
 
 .nav-link:hover {
   color: #ffd700;
+}
+
+.nav-link--active {
+  color: #ffd700;
+  border-bottom-color: #ffd700;
 }
 
 .admin-link {

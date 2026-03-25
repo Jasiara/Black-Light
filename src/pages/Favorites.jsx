@@ -1,13 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Heart, MapPin } from 'lucide-react';
 import { favoriteAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
+import SkeletonCard from '../components/SkeletonCard';
 import './Favorites.css';
 
 const Favorites = () => {
   const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(true);
   const { isAuthenticated } = useAuth();
+  const { showToast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -33,19 +37,29 @@ const Favorites = () => {
     try {
       await favoriteAPI.remove(businessId);
       setFavorites(favorites.filter((fav) => fav.id !== businessId));
+      showToast('Removed from favorites');
     } catch (error) {
-      console.error('Error removing favorite:', error);
+      showToast('Could not remove favorite', 'error');
     }
   };
 
   if (loading) {
-    return <div className="loading">Loading...</div>;
+    return (
+      <div className="favorites-page">
+        <div className="favorites-container">
+          <h1><Heart size={22} /> My Favorites</h1>
+          <div className="favorites-grid">
+            <SkeletonCard count={6} />
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="favorites-page">
       <div className="favorites-container">
-        <h1>❤️ My Favorites</h1>
+        <h1><Heart size={22} fill="currentColor" /> My Favorites</h1>
 
         {favorites.length === 0 ? (
           <div className="no-favorites">
@@ -72,12 +86,9 @@ const Favorites = () => {
                   <span className="favorite-category">{business.category}</span>
                   <p className="favorite-description">{business.description}</p>
                   <p className="favorite-location">
-                    📍 {business.city}, {business.state}
+                    <MapPin size={13} /> {business.city}, {business.state}
                   </p>
-                  <button
-                    onClick={() => handleRemoveFavorite(business.id)}
-                    className="remove-button"
-                  >
+                  <button onClick={() => handleRemoveFavorite(business.id)} className="remove-button">
                     Remove from Favorites
                   </button>
                 </div>

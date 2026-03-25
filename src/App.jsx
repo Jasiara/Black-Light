@@ -1,6 +1,10 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
+import { useState } from 'react';
 import Navbar from './components/Navbar';
+import ScrollToTop from './components/ScrollToTop';
+import LandingOverlay from './components/LandingOverlay';
 import Footer from './components/Footer';
 import Home from './pages/Home';
 import Search from './pages/Search';
@@ -9,18 +13,19 @@ import Login from './pages/Login';
 import Favorites from './pages/Favorites';
 import AdminPage from './pages/AdminPage';
 import ForgotPassword from './pages/ForgotPassword';
+import AboutUs from './pages/AboutUs';
 import BusinessDashboard from './pages/BusinessDashboard';
 import './App.css';
 
 function AppContent() {
   const location = useLocation();
-  
-  // Hide navbar on admin and business dashboard pages
-  const hideNavbar = location.pathname.startsWith('/admin') || location.pathname.startsWith('/business');
-  
+  const [showLanding, setShowLanding] = useState(true);
+
   return (
     <div className="app">
-      {!hideNavbar && <Navbar />}
+      {showLanding && <LandingOverlay onComplete={() => setShowLanding(false)} />}
+      <ScrollToTop />
+      <Navbar />
       <main>
         <Routes location={location} key={location.pathname}>
           <Route path="/" element={<Home />} />
@@ -31,6 +36,7 @@ function AppContent() {
           <Route path="/admin" element={<AdminPage />} />
           <Route path="/business-dashboard" element={<BusinessDashboard />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/about" element={<AboutUs />} />
         </Routes>
       </main>
       <Footer />
@@ -40,9 +46,11 @@ function AppContent() {
 
 function App() {
   return (
-    <Router>
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <AuthProvider>
-        <AppContent />
+        <ToastProvider>
+          <AppContent />
+        </ToastProvider>
       </AuthProvider>
     </Router>
   );

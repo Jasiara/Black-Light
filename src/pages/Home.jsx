@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { MapPin, Briefcase, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { businessAPI } from '../services/api';
 import RecommendedForYou from '../components/RecommendedForYou';
+import SkeletonCard from '../components/SkeletonCard';
 import './Home.css';
 
 const Home = () => {
@@ -13,25 +16,13 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { showToast } = useToast();
 
   const categories = [
-    'All',
-    'Food & Restaurants',
-    'Technology',
-    'Fashion & Clothing',
-    'Health & Wellness',
-    'Beauty & Hair',
-    'Real Estate',
-    'Entertainment',
-    'Automotive',
-    'Professional Services',
-    'Retail',
-    'Arts & Culture',
-    'Education',
-    'Home & Garden',
-    'Sports & Fitness',
-    'Travel & Tourism',
-    'Music'
+    'All', 'Food & Restaurants', 'Technology', 'Fashion & Clothing',
+    'Health & Wellness', 'Beauty & Hair', 'Real Estate', 'Entertainment',
+    'Automotive', 'Professional Services', 'Retail', 'Arts & Culture',
+    'Education', 'Home & Garden', 'Sports & Fitness', 'Travel & Tourism', 'Music'
   ];
 
   useEffect(() => {
@@ -41,13 +32,10 @@ const Home = () => {
   const loadFeaturedBusinesses = async () => {
     setLoading(true);
     try {
-      console.log('Loading featured businesses...'); // Debug
       const response = await businessAPI.getAll({ limit: 50 });
-      console.log('Featured businesses loaded:', response.data); // Debug
       setFeaturedBusinesses(response.data.businesses);
     } catch (error) {
-      console.error('Error loading featured businesses:', error);
-      alert('Error loading businesses. Check console for details.');
+      showToast('Could not load businesses. Please try again.', 'error');
     } finally {
       setLoading(false);
     }
@@ -68,14 +56,12 @@ const Home = () => {
         <section className="business-banner">
           <div className="banner-content">
             <div className="banner-text">
-              <h3>Welcome back, {user.name}! 👋</h3>
+              <h3>Welcome back, {user.name}!</h3>
               <p><strong>Access your business dashboard to manage your listings, promotions, and reviews.</strong></p>
             </div>
-            <button 
-              className="banner-button"
-              onClick={() => navigate('/business-dashboard')}
-            >
-              💼 Go to Dashboard
+            <button className="banner-button" onClick={() => navigate('/business-dashboard')}>
+              <Briefcase size={16} />
+              Go to Dashboard
             </button>
           </div>
         </section>
@@ -85,7 +71,6 @@ const Home = () => {
         <div className="hero-content">
           <h1>Discover & Support Black-Owned Businesses</h1>
           <p>Find local Black-owned businesses in your community</p>
-
           <form onSubmit={handleSearch} className="search-form">
             <input
               type="text"
@@ -100,9 +85,7 @@ const Home = () => {
               className="search-select"
             >
               {categories.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
+                <option key={cat} value={cat}>{cat}</option>
               ))}
             </select>
             <input
@@ -112,19 +95,23 @@ const Home = () => {
               onChange={(e) => setLocation(e.target.value)}
               className="search-input location-input"
             />
-            <button type="submit" className="search-button">
-              Search
-            </button>
+            <button type="submit" className="search-button">Search</button>
           </form>
         </div>
       </section>
 
       <RecommendedForYou />
 
-      <section className="featured">
-        <h2>✨ Featured Black-Owned Businesses</h2>
+      <section className="featured-section">
+      <div className="featured">
+        <h2>
+          <Sparkles size={22} />
+          Featured Black-Owned Businesses
+        </h2>
         {loading ? (
-          <p>Loading...</p>
+          <div className="featured-grid">
+            <SkeletonCard count={9} />
+          </div>
         ) : (
           <>
             <div className="featured-grid">
@@ -153,7 +140,8 @@ const Home = () => {
                     </div>
                     <p className="description">{business.description}</p>
                     <p className="location">
-                      📍 {business.city}, {business.state}
+                      <MapPin size={13} />
+                      {business.city}, {business.state}
                     </p>
                   </div>
                 </div>
@@ -161,16 +149,14 @@ const Home = () => {
             </div>
             {featuredBusinesses.length > 9 && (
               <div className="explore-more-container">
-                <button 
-                  className="explore-more-btn"
-                  onClick={() => navigate('/search')}
-                >
+                <button className="explore-more-btn" onClick={() => navigate('/search')}>
                   Explore More Nearby
                 </button>
               </div>
             )}
           </>
         )}
+      </div>
       </section>
     </div>
   );

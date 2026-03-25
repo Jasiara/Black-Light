@@ -10,8 +10,12 @@
 }
 
 .favorites-container h1 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin-bottom: 2rem;
   font-size: 2rem;
+  color: #c0392b;
 }
 
 .loading {
@@ -111,6 +115,9 @@
 }
 
 .favorite-location {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   color: #888;
   font-size: 0.875rem;
   margin-bottom: 1rem;

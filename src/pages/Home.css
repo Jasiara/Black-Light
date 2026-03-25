@@ -110,9 +110,14 @@
   background-color: #ffed4e;
 }
 
+.featured-section {
+  background-color: #1a1a1a;
+  padding: 3rem 0;
+}
+
 .featured {
   max-width: 1200px;
-  margin: 3rem auto;
+  margin: 0 auto;
   padding: 0 2rem;
 }
 
@@ -120,6 +125,7 @@
   font-size: 2rem;
   margin-bottom: 2rem;
   text-align: center;
+  color: #fff;
 }
 
 .featured-grid {
@@ -132,7 +138,7 @@
   display: flex;
   justify-content: center;
   margin-top: 3rem;
-  padding: 2rem 0;
+  padding: 2rem 0 0;
 }
 
 .explore-more-btn {
@@ -154,17 +160,20 @@
 }
 
 .business-card {
-  background: white;
+  background: #2a2a2a;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
   cursor: pointer;
   transition: transform 0.3s, box-shadow 0.3s;
 }
 
 .business-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.6),
+    0 0 20px rgba(120, 0, 255, 0.45),
+    0 0 45px rgba(90, 0, 220, 0.25);
 }
 
 .business-image {
@@ -179,7 +188,7 @@
 
 .business-info h3 {
   margin: 0 0 0.5rem 0;
-  color: #1a1a1a;
+  color: #fff;
 }
 
 .category {
@@ -202,14 +211,30 @@
 }
 
 .description {
-  color: #666;
+  color: #aaa;
   margin: 0.5rem 0;
 }
 
 .location {
-  color: #888;
+  color: #999;
   font-size: 0.875rem;
   margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.featured h2 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.banner-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .community-tags {

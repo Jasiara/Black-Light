@@ -1,14 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Heart, MapPin, Phone, Mail, Globe, Star } from 'lucide-react';
 import { businessAPI, reviewAPI, favoriteAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import Map from '../components/Map';
+import SkeletonCard from '../components/SkeletonCard';
 import './BusinessDetail.css';
 
 const BusinessDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
+  const { showToast } = useToast();
   const [business, setBusiness] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
@@ -37,17 +41,18 @@ const BusinessDetail = () => {
       navigate('/login');
       return;
     }
-
     try {
       if (isFavorite) {
         await favoriteAPI.remove(id);
         setIsFavorite(false);
+        showToast('Removed from favorites');
       } else {
         await favoriteAPI.add(id);
         setIsFavorite(true);
+        showToast('Added to favorites');
       }
     } catch (error) {
-      console.error('Error toggling favorite:', error);
+      showToast('Could not update favorites', 'error');
     }
   };
 
@@ -57,20 +62,15 @@ const BusinessDetail = () => {
       navigate('/login');
       return;
     }
-
     setSubmittingReview(true);
     try {
-      await reviewAPI.create({
-        business_id: id,
-        rating,
-        comment,
-      });
+      await reviewAPI.create({ business_id: id, rating, comment });
       setComment('');
       setRating(5);
-      loadBusiness(); // Reload to show new review
-      alert('Review submitted successfully!');
+      loadBusiness();
+      showToast('Review submitted!');
     } catch (error) {
-      alert(error.response?.data?.error || 'Error submitting review');
+      showToast(error.response?.data?.error || 'Error submitting review', 'error');
     } finally {
       setSubmittingReview(false);
     }
@@ -79,7 +79,9 @@ const BusinessDetail = () => {
   if (loading) {
     return (
       <div className="business-detail">
-        <div className="loading">Loading business details...</div>
+        <div className="detail-container">
+          <SkeletonCard variant="detail" />
+        </div>
       </div>
     );
   }
@@ -101,7 +103,6 @@ const BusinessDetail = () => {
       hours = typeof business.hours === 'string' ? JSON.parse(business.hours) : business.hours;
     }
   } catch (error) {
-    console.error('Error parsing hours:', error);
     hours = {};
   }
 
@@ -124,11 +125,13 @@ const BusinessDetail = () => {
           <div className="detail-main">
             <div className="detail-actions">
               <button onClick={handleFavorite} className="favorite-button">
-                {isFavorite ? '❤️ Saved' : '🤍 Save'}
+                <Heart size={16} fill={isFavorite ? 'currentColor' : 'none'} />
+                {isFavorite ? 'Saved' : 'Save'}
               </button>
               {business.average_rating && (
                 <div className="rating-display">
-                  ⭐ {business.average_rating} ({business.reviews?.length} reviews)
+                  <Star size={15} fill="currentColor" />
+                  {business.average_rating} ({business.reviews?.length} reviews)
                 </div>
               )}
             </div>
@@ -151,18 +154,14 @@ const BusinessDetail = () => {
 
             <section className="info-section">
               <h2>Contact Information</h2>
-              <p>📍 {business.address}</p>
-              <p>
-                {business.city}, {business.state} {business.zip_code}
-              </p>
-              {business.phone && <p>📞 {business.phone}</p>}
-              {business.email && <p>✉️ {business.email}</p>}
+              <p><MapPin size={14} /> {business.address}</p>
+              <p>{business.city}, {business.state} {business.zip_code}</p>
+              {business.phone && <p><Phone size={14} /> {business.phone}</p>}
+              {business.email && <p><Mail size={14} /> {business.email}</p>}
               {business.website && (
                 <p>
-                  🌐{' '}
-                  <a href={business.website} target="_blank" rel="noopener noreferrer">
-                    Visit Website
-                  </a>
+                  <Globe size={14} />
+                  <a href={business.website} target="_blank" rel="noopener noreferrer">Visit Website</a>
                 </p>
               )}
             </section>
@@ -171,9 +170,7 @@ const BusinessDetail = () => {
               <section className="info-section">
                 <h2>Hours</h2>
                 {Object.entries(hours).map(([day, time]) => (
-                  <p key={day}>
-                    <strong>{day}:</strong> {time}
-                  </p>
+                  <p key={day}><strong>{day}:</strong> {time}</p>
                 ))}
               </section>
             )}
@@ -193,16 +190,12 @@ const BusinessDetail = () => {
                   <h3>Write a Review</h3>
                   <div className="form-group">
                     <label>Rating:</label>
-                    <select
-                      value={rating}
-                      onChange={(e) => setRating(Number(e.target.value))}
-                      required
-                    >
-                      <option value={5}>⭐⭐⭐⭐⭐ (5)</option>
-                      <option value={4}>⭐⭐⭐⭐ (4)</option>
-                      <option value={3}>⭐⭐⭐ (3)</option>
-                      <option value={2}>⭐⭐ (2)</option>
-                      <option value={1}>⭐ (1)</option>
+                    <select value={rating} onChange={(e) => setRating(Number(e.target.value))} required>
+                      <option value={5}>★★★★★ (5)</option>
+                      <option value={4}>★★★★ (4)</option>
+                      <option value={3}>★★★ (3)</option>
+                      <option value={2}>★★ (2)</option>
+                      <option value={1}>★ (1)</option>
                     </select>
                   </div>
                   <div className="form-group">
@@ -215,7 +208,7 @@ const BusinessDetail = () => {
                     />
                   </div>
                   <button type="submit" disabled={submittingReview}>
-                    {submittingReview ? 'Submitting...' : 'Submit Review'}
+                    {submittingReview ? 'Submitting…' : 'Submit Review'}
                   </button>
                 </form>
               )}
@@ -227,7 +220,7 @@ const BusinessDetail = () => {
                       <div className="review-header">
                         <strong>{review.user_name}</strong>
                         <span className="review-rating">
-                          {'⭐'.repeat(review.rating)}
+                          {'★'.repeat(review.rating)}
                         </span>
                       </div>
                       {review.comment && <p>{review.comment}</p>}
