@@ -1,6 +1,16 @@
+import { useState, useEffect } from 'react';
+import { businessAPI } from '../services/api';
 import './AboutUs.css';
 
 const AboutUs = () => {
+  const [businessCount, setBusinessCount] = useState(null);
+
+  useEffect(() => {
+    businessAPI.getAll({ limit: 1000 })
+      .then(res => setBusinessCount(res.data.count ?? res.data.businesses?.length ?? null))
+      .catch(() => setBusinessCount(null));
+  }, []);
+
   return (
     <div className="about-page">
 
@@ -33,7 +43,9 @@ const AboutUs = () => {
             <div className="about-mission-visual">
               <div className="about-glow-orb" />
               <div className="about-mission-stat">
-                <span className="stat-number">500+</span>
+                <span className="stat-number">
+                  {businessCount !== null ? businessCount : '—'}
+                </span>
                 <span className="stat-label">Businesses Listed</span>
               </div>
               <div className="about-mission-stat">

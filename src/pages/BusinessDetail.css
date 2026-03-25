@@ -1,6 +1,6 @@
 .business-detail {
   min-height: 100vh;
-  background-color: #1a1a1a;
+  background-color: #f5f5f5;
 }
 
 .detail-container {
@@ -47,10 +47,10 @@
 }
 
 .detail-main {
-  background: #2a2a2a;
+  background: white;
   border-radius: 8px;
   padding: 2rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .detail-actions {
@@ -90,7 +90,7 @@
 .info-section {
   margin-bottom: 2rem;
   padding-bottom: 2rem;
-  border-bottom: 1px solid #3a3a3a;
+  border-bottom: 1px solid #eee;
 }
 
 .info-section:last-child {
@@ -99,12 +99,11 @@
 
 .info-section h2 {
   margin-bottom: 1rem;
-  color: #fff;
 }
 
 .info-section p {
   margin: 0.5rem 0;
-  color: #aaa;
+  color: #666;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -143,7 +142,7 @@
 }
 
 .review-form {
-  background: #222;
+  background: #f9f9f9;
   padding: 1.5rem;
   border-radius: 8px;
   margin: 1.5rem 0;
@@ -161,18 +160,15 @@
   display: block;
   margin-bottom: 0.5rem;
   font-weight: bold;
-  color: #ccc;
 }
 
 .form-group select,
 .form-group textarea {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #3a3a3a;
+  border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 1rem;
-  background: #2a2a2a;
-  color: #fff;
 }
 
 .review-form button {
@@ -201,7 +197,7 @@
 }
 
 .review-item {
-  background: #222;
+  background: #f9f9f9;
   padding: 1.5rem;
   border-radius: 8px;
   margin-bottom: 1rem;
@@ -220,7 +216,7 @@
 
 .review-item p {
   margin: 0.5rem 0;
-  color: #aaa;
+  color: #666;
 }
 
 .review-item small {
@@ -243,8 +239,7 @@
   text-align: center;
   padding: 3rem;
   font-size: 1.2rem;
-  background-color: #1a1a1a;
-  color: #fff;
+  background-color: #ffffff;
 }
 
 .error h2 {

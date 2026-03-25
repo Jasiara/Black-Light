@@ -1,6 +1,6 @@
 .recommended-section {
   padding: 40px 20px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background-color: #1a1a1a;
 }
 
 .recommended-header {
@@ -11,13 +11,13 @@
 .recommended-header h2 {
   font-size: 24px;
   font-weight: 700;
-  color: #333;
+  color: #ffd700;
   margin-bottom: 8px;
 }
 
 .recommended-subtitle {
   font-size: 14px;
-  color: #666;
+  color: #aaa;
   margin: 0;
 }
 
