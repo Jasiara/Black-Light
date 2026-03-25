@@ -1,6 +1,6 @@
 .business-detail {
   min-height: 100vh;
-  background-color: #f5f5f5;
+  background-color: #1a1a1a;
 }
 
 .detail-container {
@@ -47,10 +47,11 @@
 }
 
 .detail-main {
-  background: white;
+  background: #2a2a2a;
   border-radius: 8px;
   padding: 2rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  color: #fff;
 }
 
 .detail-actions {
@@ -72,6 +73,7 @@
   font-weight: bold;
   cursor: pointer;
   transition: background-color 0.3s;
+  color: #1a1a1a;
 }
 
 .favorite-button:hover {
@@ -90,7 +92,7 @@
 .info-section {
   margin-bottom: 2rem;
   padding-bottom: 2rem;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #3a3a3a;
 }
 
 .info-section:last-child {
@@ -99,11 +101,12 @@
 
 .info-section h2 {
   margin-bottom: 1rem;
+  color: #fff;
 }
 
 .info-section p {
   margin: 0.5rem 0;
-  color: #666;
+  color: #aaa;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -129,7 +132,7 @@
 }
 
 .info-section a {
-  color: #667eea;
+  color: #ffd700;
   text-decoration: none;
 }
 
@@ -142,7 +145,7 @@
 }
 
 .review-form {
-  background: #f9f9f9;
+  background: #333;
   padding: 1.5rem;
   border-radius: 8px;
   margin: 1.5rem 0;
@@ -150,6 +153,7 @@
 
 .review-form h3 {
   margin-top: 0;
+  color: #fff;
 }
 
 .form-group {
@@ -160,21 +164,24 @@
   display: block;
   margin-bottom: 0.5rem;
   font-weight: bold;
+  color: #ccc;
 }
 
 .form-group select,
 .form-group textarea {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #ddd;
+  border: 1px solid #444;
   border-radius: 4px;
   font-size: 1rem;
+  background-color: #2a2a2a;
+  color: #fff;
 }
 
 .review-form button {
   padding: 0.75rem 2rem;
-  background-color: #667eea;
-  color: white;
+  background-color: #ffd700;
+  color: #1a1a1a;
   border: none;
   border-radius: 4px;
   font-size: 1rem;
@@ -184,7 +191,7 @@
 }
 
 .review-form button:hover:not(:disabled) {
-  background-color: #5568d3;
+  background-color: #ffed4e;
 }
 
 .review-form button:disabled {
@@ -197,7 +204,7 @@
 }
 
 .review-item {
-  background: #f9f9f9;
+  background: #333;
   padding: 1.5rem;
   border-radius: 8px;
   margin-bottom: 1rem;
@@ -216,16 +223,16 @@
 
 .review-item p {
   margin: 0.5rem 0;
-  color: #666;
+  color: #aaa;
 }
 
 .review-item small {
-  color: #999;
+  color: #777;
 }
 
 .no-reviews {
   text-align: center;
-  color: #999;
+  color: #777;
   padding: 2rem;
 }
 
@@ -239,19 +246,20 @@
   text-align: center;
   padding: 3rem;
   font-size: 1.2rem;
-  background-color: #ffffff;
+  background-color: #1a1a1a;
+  color: #fff;
 }
 
 .error h2 {
   margin-bottom: 1rem;
-  color: #c33;
+  color: #ff6b6b;
 }
 
 .error button {
   margin-top: 1rem;
   padding: 0.75rem 2rem;
-  background-color: #667eea;
-  color: white;
+  background-color: #ffd700;
+  color: #1a1a1a;
   border: none;
   border-radius: 4px;
   font-size: 1rem;
