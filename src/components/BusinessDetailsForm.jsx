@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { businessAPI } from '../services/api';
 import './BusinessDetailsForm.css';
 
-const BusinessDetailsForm = ({ onSuccess, loading: parentLoading }) => {
+const BusinessDetailsForm = ({ onSuccess, loading: parentLoading, prefill = {} }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [imagePreview, setImagePreview] = useState('');
+  const [geocodeStatus, setGeocodeStatus] = useState(null); // null | 'loading' | 'success' | 'error'
+  const [geocodeMessage, setGeocodeMessage] = useState('');
   const [formData, setFormData] = useState({
-    name: '',
+    name: prefill.name || '',
     category: 'Food & Restaurants',
     description: '',
     address: '',
@@ -15,7 +17,7 @@ const BusinessDetailsForm = ({ onSuccess, loading: parentLoading }) => {
     state: 'NC',
     zip_code: '',
     phone: '',
-    email: '',
+    email: prefill.email || '',
     website: '',
     hours: JSON.stringify({ 'Mon-Fri': '9am-5pm', 'Sat-Sun': 'Closed' }),
     latitude: '',
@@ -69,6 +71,40 @@ const BusinessDetailsForm = ({ onSuccess, loading: parentLoading }) => {
     }));
   };
 
+  const geocodeAddress = async () => {
+    const { address, city, state, zip_code } = formData;
+    if (!address || !city || !state || !zip_code) {
+      setGeocodeStatus('error');
+      setGeocodeMessage('Please fill in address, city, state, and ZIP before verifying.');
+      return;
+    }
+    setGeocodeStatus('loading');
+    setGeocodeMessage('');
+    const query = encodeURIComponent(`${address}, ${city}, ${state} ${zip_code}, USA`);
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1`,
+        { headers: { 'Accept-Language': 'en', 'User-Agent': 'BlackLight-App' } }
+      );
+      const data = await res.json();
+      if (data && data.length > 0) {
+        setFormData(prev => ({
+          ...prev,
+          latitude: parseFloat(data[0].lat).toFixed(6),
+          longitude: parseFloat(data[0].lon).toFixed(6),
+        }));
+        setGeocodeStatus('success');
+        setGeocodeMessage(`Location found: ${data[0].display_name}`);
+      } else {
+        setGeocodeStatus('error');
+        setGeocodeMessage('Address not found. Please check the address and try again.');
+      }
+    } catch {
+      setGeocodeStatus('error');
+      setGeocodeMessage('Failed to look up address. Please check your connection.');
+    }
+  };
+
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -104,8 +140,13 @@ const BusinessDetailsForm = ({ onSuccess, loading: parentLoading }) => {
 
     try {
       // Validate required fields
-      if (!formData.name || !formData.address || !formData.city || !formData.state || !formData.zip_code || !formData.latitude || !formData.longitude) {
+      if (!formData.name || !formData.address || !formData.city || !formData.state || !formData.zip_code) {
         setError('Please fill in all required fields');
+        setLoading(false);
+        return;
+      }
+      if (!formData.latitude || !formData.longitude) {
+        setError('Please click "Verify Address & Set Pin" to set the map location');
         setLoading(false);
         return;
       }
@@ -155,19 +196,26 @@ const BusinessDetailsForm = ({ onSuccess, loading: parentLoading }) => {
         <form onSubmit={handleSubmit} className="business-details-form">
           <div className="form-section">
             <h3>Basic Information</h3>
-            
-            <div className="form-group">
-              <label htmlFor="name">Business Name *</label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                placeholder="Enter your business name"
-                required
-              />
-            </div>
+
+            {prefill.name ? (
+              <div className="form-group prefill-display">
+                <label>Business Name</label>
+                <p className="prefill-value">{formData.name}</p>
+              </div>
+            ) : (
+              <div className="form-group">
+                <label htmlFor="name">Business Name *</label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  placeholder="Enter your business name"
+                  required
+                />
+              </div>
+            )}
 
             <div className="form-row">
               <div className="form-group">
@@ -203,17 +251,24 @@ const BusinessDetailsForm = ({ onSuccess, loading: parentLoading }) => {
             <h3>Contact Information</h3>
 
             <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="email">Email</label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="business@example.com"
-                />
-              </div>
+              {prefill.email ? (
+                <div className="form-group prefill-display">
+                  <label>Email</label>
+                  <p className="prefill-value">{formData.email}</p>
+                </div>
+              ) : (
+                <div className="form-group">
+                  <label htmlFor="email">Email</label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="business@example.com"
+                  />
+                </div>
+              )}
 
               <div className="form-group">
                 <label htmlFor="phone">Phone Number</label>
@@ -299,34 +354,21 @@ const BusinessDetailsForm = ({ onSuccess, loading: parentLoading }) => {
               </div>
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="latitude">Latitude *</label>
-                <input
-                  type="number"
-                  id="latitude"
-                  name="latitude"
-                  step="0.000001"
-                  value={formData.latitude}
-                  onChange={handleChange}
-                  placeholder="36.0726"
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="longitude">Longitude *</label>
-                <input
-                  type="number"
-                  id="longitude"
-                  name="longitude"
-                  step="0.000001"
-                  value={formData.longitude}
-                  onChange={handleChange}
-                  placeholder="-79.7920"
-                  required
-                />
-              </div>
+            <div className="form-group">
+              <button
+                type="button"
+                className="geocode-btn"
+                onClick={geocodeAddress}
+                disabled={geocodeStatus === 'loading'}
+              >
+                {geocodeStatus === 'loading' ? 'Finding Location...' : 'Verify Address & Set Pin'}
+              </button>
+              {geocodeStatus === 'success' && (
+                <p className="geocode-success">{geocodeMessage}</p>
+              )}
+              {geocodeStatus === 'error' && (
+                <p className="geocode-error">{geocodeMessage}</p>
+              )}
             </div>
           </div>
 

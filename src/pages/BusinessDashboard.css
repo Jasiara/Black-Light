@@ -6,7 +6,7 @@
   justify-content: center;
   padding: 2rem 1rem 4rem;
   min-height: 100%;
-  background: #f1f3f4;
+  background: #1a1a1a;
 }
 
 .bd-panel {
@@ -29,7 +29,7 @@
 .bd-hero-bg {
   width: 100%;
   height: 100%;
-  background: linear-gradient(145deg, #004d40 0%, #00897b 45%, #4db6ac 100%);
+  background: linear-gradient(145deg, #1a1a2e 0%, #667eea 55%, #764ba2 100%);
 }
 
 .bd-hero-cta {
@@ -135,8 +135,8 @@
 }
 
 .bd-tab--active {
-  color: #00897b;
-  border-bottom-color: #00897b;
+  color: #667eea;
+  border-bottom-color: #667eea;
 }
 
 .bd-tab:hover:not(.bd-tab--active) {
@@ -176,22 +176,22 @@
   width: 54px;
   height: 54px;
   border-radius: 50%;
-  background: #e0f2f1;
+  background: #ede9fe;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: background 0.2s, transform 0.15s;
 }
 .bd-action-circle:hover {
-  background: #b2dfdb;
+  background: #c4b5fd;
   transform: translateY(-2px);
 }
 
 .bd-action--primary .bd-action-circle {
-  background: #00897b;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 .bd-action--primary .bd-action-circle:hover {
-  background: #00695c;
+  background: linear-gradient(135deg, #5a6fd6 0%, #6a3f94 100%);
 }
 
 .bd-action-icon {
@@ -220,10 +220,10 @@
   justify-content: center;
   gap: 0.6rem;
   padding: 0.85rem 1rem;
-  background: #e0f2f1;
-  border: 1.5px solid #80cbc4;
+  background: #ede9fe;
+  border: 1.5px solid #a78bfa;
   border-radius: 28px;
-  color: #00695c;
+  color: #5b21b6;
   font-family: 'DM Sans', sans-serif;
   font-size: 0.95rem;
   font-weight: 600;
@@ -232,8 +232,8 @@
   letter-spacing: 0.1px;
 }
 .bd-cta-btn:hover {
-  background: #b2dfdb;
-  border-color: #4db6ac;
+  background: #c4b5fd;
+  border-color: #764ba2;
 }
 
 .bd-cta-icon { font-size: 1.1rem; }
@@ -256,7 +256,7 @@
 }
 
 .bd-service-check {
-  color: #00897b;
+  color: #667eea;
   font-weight: 700;
   font-size: 0.9rem;
 }
@@ -316,7 +316,7 @@
 }
 
 .bd-open {
-  color: #188038;
+  color: #667eea;
   font-weight: 500;
 }
 
@@ -450,7 +450,7 @@
 .bd-text-btn {
   background: none;
   border: none;
-  color: #00897b;
+  color: #667eea;
   font-family: 'DM Sans', sans-serif;
   font-size: 0.875rem;
   font-weight: 600;
@@ -467,9 +467,9 @@
   gap: 0.4rem;
   padding: 0.75rem;
   background: none;
-  border: 1.5px dashed #80cbc4;
+  border: 1.5px dashed #a78bfa;
   border-radius: 8px;
-  color: #00897b;
+  color: #667eea;
   font-family: 'DM Sans', sans-serif;
   font-size: 0.875rem;
   font-weight: 600;
@@ -477,8 +477,8 @@
   transition: background 0.2s, border-color 0.2s;
 }
 .bd-add-photos-btn:hover {
-  background: #e0f2f1;
-  border-color: #00897b;
+  background: #ede9fe;
+  border-color: #667eea;
 }
 
 /* ─── Review summary ─────────────────────────────────────── */

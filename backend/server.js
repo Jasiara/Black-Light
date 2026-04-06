@@ -13,6 +13,7 @@ import businessRoutes from './routes/businesses.js';
 import reviewRoutes from './routes/reviews.js';
 import favoriteRoutes from './routes/favorites.js';
 import adminRoutes from './routes/admin.js';
+import { seedGreensboroBusinesses } from './migrations/seed_greensboro_businesses.js';
 
 dotenv.config();
 
@@ -32,6 +33,7 @@ app.use(express.urlencoded({ extended: true }));
   await addBusinessOwnerIdColumn();
   await addCommunityTagsColumn();
   await seedDatabase();
+  await seedGreensboroBusinesses();
 })();
 
 // Routes

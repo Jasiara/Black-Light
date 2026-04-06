@@ -183,9 +183,10 @@ const Login = () => {
       )}
       
       {showBusinessDetailsForm && (
-        <BusinessDetailsForm 
+        <BusinessDetailsForm
           onSuccess={handleBusinessDetailsSubmit}
           loading={loading}
+          prefill={{ name: formData.businessName, email: formData.email }}
         />
       )}
       

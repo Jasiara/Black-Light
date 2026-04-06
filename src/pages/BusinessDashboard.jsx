@@ -1,17 +1,15 @@
-import { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useState, useEffect } from 'react';
 import DashboardLayout from '../components/dashboard/DashboardLayout';
-import ReviewsCard from '../components/dashboard/ReviewsCard';
-import PerformanceOverview from '../components/dashboard/PerformanceOverview';
-import PromotionsCard from '../components/dashboard/PromotionsCard';
-import LocalInsights from '../components/dashboard/LocalInsights';
+import { businessAPI, reviewAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import BusinessDetailsForm from '../components/BusinessDetailsForm';
 import './BusinessDashboard.css';
 
 const StarRating = ({ rating }) => {
   const full = Math.floor(rating);
   const half = rating % 1 >= 0.5;
   return (
-    <span className="bd-stars" aria-label={`${rating} stars`}>
+    <span className="bd-stars">
       {Array.from({ length: 5 }, (_, i) => {
         if (i < full) return <span key={i} className="bd-star full">★</span>;
         if (i === full && half) return <span key={i} className="bd-star half">★</span>;
@@ -21,277 +19,338 @@ const StarRating = ({ rating }) => {
   );
 };
 
-const ActionButton = ({ icon, label, primary }) => (
-  <div className={`bd-action${primary ? ' bd-action--primary' : ''}`}>
-    <div className="bd-action-circle">
-      <span className="bd-action-icon">{icon}</span>
+const RatingBar = ({ stars, count, total }) => {
+  const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+  return (
+    <div className="bd-bar-row">
+      <span className="bd-bar-label">{stars}★</span>
+      <div className="bd-bar-track">
+        <div className="bd-bar-fill" style={{ width: `${pct}%` }} />
+      </div>
+      <span className="bd-bar-count">{count}</span>
     </div>
-    <span className="bd-action-label">{label}</span>
-  </div>
-);
+  );
+};
 
-const InfoRow = ({ icon, children, accent, chevron }) => (
-  <div className={`bd-info-row${chevron ? ' bd-info-row--clickable' : ''}`}>
-    <span className="bd-info-icon">{icon}</span>
-    <div className={`bd-info-content${accent ? ' bd-info-content--accent' : ''}`}>
-      {children}
-    </div>
-    {chevron && <span className="bd-info-chevron">›</span>}
-  </div>
-);
+const ReviewItem = ({ review, onReplySubmit }) => {
+  const [showForm, setShowForm] = useState(false);
+  const [text, setText] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-const PhotoTile = ({ label, sublabel, name, addButton, onClick }) => (
-  <div className={`bd-photo-tile${addButton ? ' bd-photo-tile--add' : ''}`} onClick={onClick}>
-    <div className="bd-photo-inner">
-      {addButton ? (
-        <span className="bd-photo-add-icon">+</span>
-      ) : (
-        <span className="bd-photo-placeholder-icon">📷</span>
+  const submit = async () => {
+    if (!text.trim()) return;
+    setSubmitting(true);
+    await onReplySubmit(review.id, text);
+    setSubmitting(false);
+    setShowForm(false);
+    setText('');
+  };
+
+  return (
+    <div className="bd-review">
+      <div className="bd-review-header">
+        <div className="bd-review-avatar">{review.user_name?.[0]?.toUpperCase() || '?'}</div>
+        <div className="bd-review-meta">
+          <span className="bd-review-name">{review.user_name}</span>
+          <div className="bd-review-sub">
+            <StarRating rating={review.rating} />
+            <span className="bd-review-date">
+              {new Date(review.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            </span>
+          </div>
+        </div>
+      </div>
+      {review.comment && <p className="bd-review-body">{review.comment}</p>}
+      {review.owner_reply && (
+        <div className="bd-owner-reply">
+          <span className="bd-owner-reply-label">Your response</span>
+          <p>{review.owner_reply}</p>
+        </div>
+      )}
+      {!review.owner_reply && !showForm && (
+        <button className="bd-reply-btn" onClick={() => setShowForm(true)}>Reply</button>
+      )}
+      {showForm && (
+        <div className="bd-reply-form">
+          <textarea
+            value={text}
+            onChange={e => setText(e.target.value)}
+            placeholder="Write your public response..."
+            rows={3}
+          />
+          <div className="bd-reply-actions">
+            <button className="bd-btn-primary" onClick={submit} disabled={submitting}>
+              {submitting ? 'Posting...' : 'Post Response'}
+            </button>
+            <button className="bd-btn-ghost" onClick={() => setShowForm(false)}>Cancel</button>
+          </div>
+        </div>
       )}
     </div>
-    {label && <span className="bd-photo-badge">{label}</span>}
-    {name && <span className="bd-photo-name">{name}</span>}
-    {sublabel && <span className="bd-photo-sublabel">{sublabel}</span>}
-  </div>
-);
-
-const RatingBar = ({ stars, pct, color }) => (
-  <div className="bd-bar-row">
-    <span className="bd-bar-star">{stars}</span>
-    <div className="bd-bar-track">
-      <div className="bd-bar-fill" style={{ width: `${pct}%`, background: color }} />
-    </div>
-  </div>
-);
+  );
+};
 
 const BusinessDashboard = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
+  const [business, setBusiness] = useState(null);
+  const [reviews, setReviews] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const business = {
-    name: user?.businessName || user?.name || 'Your Business',
-    category: user?.category || 'Local Business',
-    rating: 4.6,
-    reviewCount: 751,
-    priceRange: '$20–30',
-    address: '435 Dolley Madison Rd, Greensboro, NC 27410',
-    hours: 'Open · Closes 10 PM',
-    priceDesc: '$20–30 per person',
-    priceSub: 'Reported by customers',
-    website: 'yourbusiness.square.site',
-    phone: '(336) 549-9222',
+  useEffect(() => {
+    businessAPI.getMy()
+      .then(res => {
+        const biz = res.data.business;
+        setBusiness(biz);
+        if (biz) {
+          reviewAPI.getByBusiness(biz.id)
+            .then(r => setReviews(r.data.reviews || []))
+            .catch(() => setReviews([]));
+        }
+      })
+      .catch(() => setBusiness(null))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleReply = async (reviewId, reply) => {
+    const res = await reviewAPI.reply(reviewId, reply);
+    setReviews(prev => prev.map(r => r.id === reviewId ? res.data.review : r));
   };
 
-  const services = ['Dine-in', 'Curbside pickup', 'Delivery'];
+  const avgRating = reviews.length > 0
+    ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
+    : null;
 
-  const tabs = ['overview', 'promotions', 'reviews', 'insights'];
+  const repliedCount = reviews.filter(r => r.owner_reply).length;
 
-  const ratingBars = [
-    { stars: 5, pct: 84 },
-    { stars: 4, pct: 10 },
-    { stars: 3, pct: 3 },
-    { stars: 2, pct: 2 },
-    { stars: 1, pct: 1 },
-  ];
+  const parseHours = (hours) => {
+    if (!hours) return [];
+    try {
+      const h = typeof hours === 'string' ? JSON.parse(hours) : hours;
+      return Object.entries(h);
+    } catch { return []; }
+  };
 
-  const actions = [
-    { icon: '✏️', label: 'Edit Profile', primary: true },
-    { icon: '📷', label: 'Add Photos' },
-    { icon: '📣', label: 'Promotions' },
-    { icon: '📊', label: 'Analytics' },
-    { icon: '↗', label: 'Share' },
-  ];
+  if (loading) return (
+    <DashboardLayout>
+      <div className="bd-loading">Loading your dashboard...</div>
+    </DashboardLayout>
+  );
 
-  const menuHighlights = [
-    { label: 'Menu' },
-    { label: 'Popular', name: 'Mac & Cheese' },
-    { label: 'Popular', name: 'Fried Plate' },
-  ];
-
-  const photoAlbums = [
-    { label: 'All' },
-    { label: 'Latest', sublabel: '5 days ago' },
-    { label: 'Videos' },
-  ];
+  if (!business) return (
+    <DashboardLayout>
+      <div className="bd-page">
+        <BusinessDetailsForm
+          prefill={{ name: user?.name, email: user?.email }}
+          onSuccess={(newBusiness) => setBusiness(newBusiness)}
+        />
+      </div>
+    </DashboardLayout>
+  );
 
   return (
-    <DashboardLayout activeTab="dashboard">
-      <div className="bd-wrapper">
-        <div className="bd-panel">
+    <DashboardLayout>
+      <div className="bd-page">
 
-          {/* ── Hero ── */}
-          <div className="bd-hero">
-            <div className="bd-hero-bg" />
-            <button className="bd-hero-cta">📷 Add cover photo</button>
+        {/* Hero */}
+        <div className="bd-hero">
+          {business.image_url
+            ? <img src={business.image_url} alt={business.name} className="bd-hero-img" />
+            : <div className="bd-hero-gradient" />
+          }
+          <div className="bd-hero-overlay" />
+          <div className="bd-hero-content">
+            <span className="bd-hero-category">{business.category}</span>
+            <h1 className="bd-hero-name">{business.name}</h1>
           </div>
+        </div>
 
-          {/* ── Header ── */}
-          <div className="bd-header">
-            <h1 className="bd-name">{business.name}</h1>
-            <div className="bd-rating-row">
-              <span className="bd-rating-num">{business.rating}</span>
-              <StarRating rating={business.rating} />
-              <span className="bd-rating-count">({business.reviewCount})</span>
-              <span className="bd-dot">·</span>
-              <span className="bd-price">{business.priceRange}</span>
-            </div>
-            <p className="bd-category">{business.category}</p>
+        {/* Stats Bar */}
+        <div className="bd-stats-bar">
+          <div className="bd-stat">
+            <span className="bd-stat-value">{avgRating ?? '—'}</span>
+            {avgRating && <StarRating rating={parseFloat(avgRating)} />}
+            <span className="bd-stat-label">Avg Rating</span>
           </div>
-
-          {/* ── Tabs ── */}
-          <div className="bd-tabs" role="tablist">
-            {tabs.map(tab => (
-              <button
-                key={tab}
-                role="tab"
-                aria-selected={activeTab === tab}
-                className={`bd-tab${activeTab === tab ? ' bd-tab--active' : ''}`}
-                onClick={() => setActiveTab(tab)}
-              >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
-              </button>
-            ))}
+          <div className="bd-stat-divider" />
+          <div className="bd-stat">
+            <span className="bd-stat-value">{reviews.length}</span>
+            <span className="bd-stat-label">Reviews</span>
           </div>
+          <div className="bd-stat-divider" />
+          <div className="bd-stat">
+            <span className="bd-stat-value">{repliedCount}</span>
+            <span className="bd-stat-label">Replied</span>
+          </div>
+          <div className="bd-stat-divider" />
+          <div className="bd-stat">
+            <span className="bd-stat-value">{reviews.length - repliedCount}</span>
+            <span className="bd-stat-label">Pending Reply</span>
+          </div>
+        </div>
 
-          {/* ── Divider ── */}
-          <div className="bd-divider" />
+        {/* Body */}
+        <div className="bd-body">
 
-          {/* ══ OVERVIEW TAB ══ */}
-          {activeTab === 'overview' && (
-            <>
-              {/* Action buttons */}
-              <div className="bd-actions">
-                {actions.map((a, i) => (
-                  <ActionButton key={i} icon={a.icon} label={a.label} primary={a.primary} />
-                ))}
-              </div>
-
-              <div className="bd-divider" />
-
-              {/* CTA */}
-              <div className="bd-cta-wrap">
-                <button className="bd-cta-btn">
-                  <span className="bd-cta-icon">🛍️</span>
-                  Manage your listing
-                </button>
-              </div>
-
-              <div className="bd-divider" />
-
-              {/* Services */}
-              <div className="bd-services">
-                {services.map((s, i) => (
-                  <div key={i} className="bd-service">
-                    <span className="bd-service-check">✓</span>
-                    <span>{s}</span>
-                  </div>
-                ))}
-                <span className="bd-services-more">›</span>
-              </div>
-
-              <div className="bd-divider" />
-
-              {/* Info list */}
+          {/* Sidebar */}
+          <aside className="bd-sidebar">
+            <div className="bd-card">
+              <h3 className="bd-card-title">Business Info</h3>
               <div className="bd-info-list">
-                <InfoRow icon="📍">
-                  {business.address}
-                </InfoRow>
-                <InfoRow icon="🕐" chevron>
-                  <span className="bd-open">{business.hours}</span>
-                </InfoRow>
-                <InfoRow icon="💲" chevron>
-                  <div>{business.priceDesc}</div>
-                  <div className="bd-info-sub">{business.priceSub}</div>
-                </InfoRow>
-                <InfoRow icon="🌐">
-                  <span className="bd-link">{business.website}</span>
-                </InfoRow>
-                <InfoRow icon="📞">
-                  {business.phone}
-                </InfoRow>
-              </div>
-
-              <div className="bd-divider" />
-
-              {/* Menu & highlights */}
-              <div className="bd-section">
-                <div className="bd-section-header">
-                  <h3 className="bd-section-title">Menu &amp; highlights</h3>
+                <div className="bd-info-row">
+                  <span className="bd-info-icon">📍</span>
+                  <span>{business.address}, {business.city}, {business.state} {business.zip_code}</span>
                 </div>
-                <div className="bd-photo-grid">
-                  {menuHighlights.map((item, i) => (
-                    <PhotoTile key={i} label={item.label} name={item.name} />
+                {business.phone && (
+                  <div className="bd-info-row">
+                    <span className="bd-info-icon">📞</span>
+                    <span>{business.phone}</span>
+                  </div>
+                )}
+                {business.email && (
+                  <div className="bd-info-row">
+                    <span className="bd-info-icon">✉️</span>
+                    <span>{business.email}</span>
+                  </div>
+                )}
+                {business.website && (
+                  <div className="bd-info-row">
+                    <span className="bd-info-icon">🌐</span>
+                    <a href={business.website} target="_blank" rel="noreferrer" className="bd-link">
+                      {business.website.replace(/^https?:\/\//, '')}
+                    </a>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {parseHours(business.hours).length > 0 && (
+              <div className="bd-card">
+                <h3 className="bd-card-title">Hours</h3>
+                <div className="bd-hours-list">
+                  {parseHours(business.hours).map(([days, time]) => (
+                    <div key={days} className="bd-hours-row">
+                      <span className="bd-hours-days">{days}</span>
+                      <span className="bd-hours-time">{time}</span>
+                    </div>
                   ))}
                 </div>
-                <button className="bd-text-btn">See more</button>
               </div>
+            )}
 
-              <div className="bd-divider" />
-
-              {/* Photos & videos */}
-              <div className="bd-section">
-                <h3 className="bd-section-title">Photos &amp; videos</h3>
-                <div className="bd-photo-grid">
-                  {photoAlbums.map((item, i) => (
-                    <PhotoTile key={i} label={item.label} sublabel={item.sublabel} />
-                  ))}
+            {(() => {
+              const tags = business.community_tags
+                ? (typeof business.community_tags === 'string'
+                    ? JSON.parse(business.community_tags)
+                    : business.community_tags)
+                : [];
+              return tags.length > 0 ? (
+                <div className="bd-card">
+                  <h3 className="bd-card-title">Tags</h3>
+                  <div className="bd-tags">
+                    {tags.map(tag => <span key={tag} className="bd-tag">{tag}</span>)}
+                  </div>
                 </div>
-                <button className="bd-add-photos-btn">
-                  <span>+</span> Add photos &amp; videos
+              ) : null;
+            })()}
+          </aside>
+
+          {/* Main */}
+          <div className="bd-main">
+            <div className="bd-tabs">
+              {['overview', 'reviews', 'insights'].map(tab => (
+                <button
+                  key={tab}
+                  className={`bd-tab${activeTab === tab ? ' bd-tab--active' : ''}`}
+                  onClick={() => setActiveTab(tab)}
+                >
+                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
                 </button>
-              </div>
+              ))}
+            </div>
 
-              <div className="bd-divider" />
-
-              {/* Review summary */}
-              <div className="bd-section">
-                <div className="bd-section-header">
-                  <h3 className="bd-section-title">Review summary</h3>
-                  <button className="bd-help-btn">?</button>
+            {activeTab === 'overview' && (
+              <div className="bd-tab-content">
+                <div className="bd-actions-row">
+                  {[
+                    { icon: '✏️', label: 'Edit Profile' },
+                    { icon: '📷', label: 'Add Photos' },
+                    { icon: '📣', label: 'Promotions' },
+                    { icon: '📊', label: 'Analytics' },
+                  ].map(a => (
+                    <button key={a.label} className="bd-action-btn">
+                      <span>{a.icon}</span>
+                      <span>{a.label}</span>
+                    </button>
+                  ))}
                 </div>
-                <div className="bd-review-summary">
-                  <div className="bd-bars">
-                    {ratingBars.map((b) => (
-                      <RatingBar
-                        key={b.stars}
-                        stars={b.stars}
-                        pct={b.pct}
-                        color={b.pct > 50 ? '#f9ab00' : '#fbcf68'}
-                      />
-                    ))}
+
+                {business.description && (
+                  <div className="bd-card">
+                    <h3 className="bd-card-title">About</h3>
+                    <p className="bd-description">{business.description}</p>
                   </div>
-                  <div className="bd-big-rating">
-                    <span className="bd-big-num">{business.rating}</span>
-                    <StarRating rating={business.rating} />
-                  </div>
+                )}
+
+                <div className="bd-card">
+                  <h3 className="bd-card-title">Recent Reviews</h3>
+                  {reviews.length === 0
+                    ? <p className="bd-empty-text">No reviews yet.</p>
+                    : reviews.slice(0, 3).map(r => (
+                        <ReviewItem key={r.id} review={r} onReplySubmit={handleReply} />
+                      ))
+                  }
                 </div>
               </div>
-            </>
-          )}
+            )}
 
-          {/* ══ PROMOTIONS TAB ══ */}
-          {activeTab === 'promotions' && (
-            <div className="bd-tab-pane">
-              <PromotionsCard />
-            </div>
-          )}
+            {activeTab === 'reviews' && (
+              <div className="bd-tab-content">
+                <div className="bd-card">
+                  <h3 className="bd-card-title">All Reviews ({reviews.length})</h3>
+                  {reviews.length === 0
+                    ? <p className="bd-empty-text">No reviews yet.</p>
+                    : reviews.map(r => (
+                        <ReviewItem key={r.id} review={r} onReplySubmit={handleReply} />
+                      ))
+                  }
+                </div>
+              </div>
+            )}
 
-          {/* ══ REVIEWS TAB ══ */}
-          {activeTab === 'reviews' && (
-            <div className="bd-tab-pane">
-              <ReviewsCard />
-            </div>
-          )}
-
-          {/* ══ INSIGHTS TAB ══ */}
-          {activeTab === 'insights' && (
-            <div className="bd-tab-pane">
-              <PerformanceOverview />
-              <div className="bd-divider bd-divider--inner" />
-              <LocalInsights />
-            </div>
-          )}
-
+            {activeTab === 'insights' && (
+              <div className="bd-tab-content">
+                <div className="bd-insights-grid">
+                  {[
+                    { icon: '⭐', value: avgRating ?? '—', label: 'Avg Rating' },
+                    { icon: '💬', value: reviews.length, label: 'Total Reviews' },
+                    { icon: '✅', value: repliedCount, label: 'Replied' },
+                    { icon: '⏳', value: reviews.length - repliedCount, label: 'Awaiting Reply' },
+                  ].map(s => (
+                    <div key={s.label} className="bd-insight-card">
+                      <span className="bd-insight-icon">{s.icon}</span>
+                      <span className="bd-insight-value">{s.value}</span>
+                      <span className="bd-insight-label">{s.label}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="bd-card">
+                  <h3 className="bd-card-title">Rating Breakdown</h3>
+                  {reviews.length === 0
+                    ? <p className="bd-empty-text">No reviews yet.</p>
+                    : [5, 4, 3, 2, 1].map(stars => (
+                        <RatingBar
+                          key={stars}
+                          stars={stars}
+                          count={reviews.filter(r => r.rating === stars).length}
+                          total={reviews.length}
+                        />
+                      ))
+                  }
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </DashboardLayout>

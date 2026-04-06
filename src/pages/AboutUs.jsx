@@ -4,11 +4,15 @@ import './AboutUs.css';
 
 const AboutUs = () => {
   const [businessCount, setBusinessCount] = useState(null);
+  const [memberCount, setMemberCount] = useState(null);
 
   useEffect(() => {
-    businessAPI.getAll({ limit: 1000 })
-      .then(res => setBusinessCount(res.data.count ?? res.data.businesses?.length ?? null))
-      .catch(() => setBusinessCount(null));
+    businessAPI.getStats()
+      .then(res => {
+        setBusinessCount(res.data.businessCount ?? null);
+        setMemberCount(res.data.memberCount ?? null);
+      })
+      .catch(() => {});
   }, []);
 
   return (
@@ -49,7 +53,9 @@ const AboutUs = () => {
                 <span className="stat-label">Businesses Listed</span>
               </div>
               <div className="about-mission-stat">
-                <span className="stat-number">10k+</span>
+                <span className="stat-number">
+                  {memberCount !== null ? memberCount : '—'}
+                </span>
                 <span className="stat-label">Community Members</span>
               </div>
               <div className="about-mission-stat">

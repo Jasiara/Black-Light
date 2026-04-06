@@ -33,8 +33,10 @@ export const authAPI = {
 // Business endpoints
 export const businessAPI = {
   getAll: (params) => api.get('/businesses', { params }),
+  getStats: () => api.get('/businesses/stats'),
   getFeatured: (limit = 3) => api.get('/businesses/featured', { params: { limit } }),
   getRecommended: (params) => api.get('/businesses/recommended/for-you', { params }),
+  getMy: () => api.get('/businesses/my'),
   getById: (id) => api.get(`/businesses/${id}`),
   create: (data) => api.post('/businesses', data),
   update: (id, data) => api.put(`/businesses/${id}`, data),
@@ -45,6 +47,7 @@ export const businessAPI = {
 export const reviewAPI = {
   getByBusiness: (businessId) => api.get(`/reviews/business/${businessId}`),
   create: (data) => api.post('/reviews', data),
+  reply: (id, reply) => api.post(`/reviews/${id}/reply`, { reply }),
   delete: (id) => api.delete(`/reviews/${id}`),
 };
 

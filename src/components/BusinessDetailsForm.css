@@ -276,3 +276,54 @@
     height: 200px;
   }
 }
+
+.geocode-btn {
+  background-color: #1a1a2e;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: background 0.2s;
+}
+
+.geocode-btn:hover:not(:disabled) {
+  background-color: #ffd700;
+  color: #1a1a2e;
+}
+
+.geocode-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.geocode-success {
+  margin-top: 0.5rem;
+  font-size: 0.82rem;
+  color: #2e7d32;
+  background: #e8f5e9;
+  border-radius: 4px;
+  padding: 0.4rem 0.6rem;
+  word-break: break-word;
+}
+
+.geocode-error {
+  margin-top: 0.5rem;
+  font-size: 0.82rem;
+  color: #c62828;
+  background: #ffebee;
+  border-radius: 4px;
+  padding: 0.4rem 0.6rem;
+}
+
+.prefill-display .prefill-value {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  color: #444;
+  font-size: 0.95rem;
+}

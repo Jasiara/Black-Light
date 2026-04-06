@@ -71,6 +71,37 @@ router.post('/', authenticateToken, async (req, res) => {
   }
 });
 
+// POST owner reply to a review
+router.post('/:id/reply', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reply } = req.body;
+    if (!reply || !reply.trim()) return res.status(400).json({ error: 'Reply text is required' });
+
+    const check = await pool.query(
+      `SELECT r.id FROM reviews r
+       JOIN businesses b ON b.id = r.business_id
+       WHERE r.id = $1 AND b.business_owner_id = $2`,
+      [id, req.user.id]
+    );
+    if (check.rows.length === 0) return res.status(403).json({ error: 'Not authorized' });
+
+    // Add column if missing (safe migration)
+    await pool.query(`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS owner_reply TEXT`);
+    await pool.query(`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS replied_at TIMESTAMP`);
+
+    const result = await pool.query(
+      `UPDATE reviews SET owner_reply = $1, replied_at = NOW() WHERE id = $2
+       RETURNING id, business_id, user_id, rating, comment, owner_reply, replied_at, created_at`,
+      [reply.trim(), id]
+    );
+    res.json({ review: result.rows[0] });
+  } catch (error) {
+    console.error('Reply error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // DELETE review (protected)
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {

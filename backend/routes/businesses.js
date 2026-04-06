@@ -42,6 +42,43 @@ router.get('/', async (req, res) => {
   }
 });
 
+// GET the logged-in owner's business with live rating
+router.get('/my', authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT b.*,
+        ROUND(AVG(r.rating)::numeric, 1) AS average_rating,
+        COUNT(r.id)::int AS review_count
+       FROM businesses b
+       LEFT JOIN reviews r ON r.business_id = b.id
+       WHERE b.business_owner_id = $1
+       GROUP BY b.id`,
+      [req.user.id]
+    );
+    res.json({ business: result.rows[0] || null });
+  } catch (error) {
+    console.error('Get my business error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// GET public stats (business count + non-admin user count)
+router.get('/stats', async (_req, res) => {
+  try {
+    const [bizResult, userResult] = await Promise.all([
+      pool.query('SELECT COUNT(*) FROM businesses'),
+      pool.query('SELECT COUNT(*) FROM users WHERE is_admin = false'),
+    ]);
+    res.json({
+      businessCount: parseInt(bizResult.rows[0].count),
+      memberCount: parseInt(userResult.rows[0].count),
+    });
+  } catch (error) {
+    console.error('Stats error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // GET random featured businesses
 router.get('/featured', async (req, res) => {
   try {
@@ -63,7 +100,7 @@ router.post('/', authenticateToken, async (req, res) => {
     let { name, category, description, address, city, state, zip_code, phone, email, website, hours, latitude, longitude, image_url, community_tags } = req.body;
 
     // Validate required fields
-    if (!name || !category || !address || !city || !state || !zip_code || !latitude || !longitude) {
+    if (!name || !category || !address || !city || !state || !zip_code) {
       return res.status(400).json({ error: 'Required fields are missing' });
     }
 

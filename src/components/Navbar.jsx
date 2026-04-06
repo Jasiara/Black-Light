@@ -22,6 +22,9 @@ const Navbar = () => {
             <polygon points="37,2 38.27,6.73 43,8 38.27,9.27 37,14 35.73,9.27 31,8 35.73,6.73" opacity="0.9" />
           </svg>
           Black Light
+          {user?.userType === 'business_owner' && (
+            <span className="nav-logo-badge">business</span>
+          )}
         </Link>
         <div className="nav-menu">
           <Link to="/" className={`nav-link ${isActive('/') ? 'nav-link--active' : ''}`}>
@@ -35,10 +38,21 @@ const Navbar = () => {
                 Favorites
               </Link>
               {user?.userType === 'business_owner' && (
-                <Link to="/business-dashboard" className={`nav-link ${isActive('/business-dashboard') ? 'nav-link--active' : ''}`}>
-                  <LayoutDashboard size={15} />
-                  Dashboard
-                </Link>
+                <>
+                  <Link to="/business-dashboard" className={`nav-link ${isActive('/business-dashboard') ? 'nav-link--active' : ''}`}>
+                    <LayoutDashboard size={15} />
+                    Dashboard
+                  </Link>
+                  <Link to="/business/messages" className={`nav-link ${isActive('/business/messages') ? 'nav-link--active' : ''}`}>
+                    💬 Messages
+                  </Link>
+                  <Link to="/business/settings" className={`nav-link ${isActive('/business/settings') ? 'nav-link--active' : ''}`}>
+                    ⚙️ Settings
+                  </Link>
+                  <Link to="/business/profile" className={`nav-link ${isActive('/business/profile') ? 'nav-link--active' : ''}`}>
+                    👤 Profile
+                  </Link>
+                </>
               )}
               {isAdmin && (
                 <Link to="/admin" className={`nav-link admin-link ${isActive('/admin') ? 'nav-link--active' : ''}`}>
