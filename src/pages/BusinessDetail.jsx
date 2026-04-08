@@ -225,6 +225,12 @@ const BusinessDetail = () => {
                       </div>
                       {review.comment && <p>{review.comment}</p>}
                       <small>{new Date(review.created_at).toLocaleDateString()}</small>
+                      {review.owner_reply && (
+                        <div className="owner-reply">
+                          <span className="owner-reply-label">Business Response</span>
+                          <p>{review.owner_reply}</p>
+                        </div>
+                      )}
                     </div>
                   ))
                 ) : (

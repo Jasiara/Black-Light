@@ -5,6 +5,203 @@ import { useAuth } from '../context/AuthContext';
 import BusinessDetailsForm from '../components/BusinessDetailsForm';
 import './BusinessDashboard.css';
 
+const CATEGORIES = [
+  'Food & Restaurants','Technology','Fashion & Clothing','Health & Wellness',
+  'Beauty & Hair','Real Estate','Entertainment','Automotive',
+  'Professional Services','Retail','Arts & Culture','Education',
+  'Home & Garden','Sports & Fitness','Travel & Tourism','Music',
+];
+
+const COMMUNITY_TAG_OPTIONS = [
+  'Women-Owned','Family-Owned','Vegan-Friendly','Kid-Friendly','LGBTQ-Owned','New Business',
+];
+
+const EditBusinessModal = ({ business, onClose, onSaved }) => {
+  const [form, setForm] = useState({
+    name:            business.name            || '',
+    category:        business.category        || CATEGORIES[0],
+    description:     business.description     || '',
+    address:         business.address         || '',
+    city:            business.city            || '',
+    state:           business.state           || '',
+    zip_code:        business.zip_code        || '',
+    phone:           business.phone           || '',
+    email:           business.email           || '',
+    website:         business.website         || '',
+    image_url:       business.image_url       || '',
+    hours:           typeof business.hours === 'string'
+                       ? business.hours
+                       : JSON.stringify(business.hours || {}),
+    community_tags:  Array.isArray(business.community_tags)
+                       ? business.community_tags
+                       : (typeof business.community_tags === 'string'
+                           ? JSON.parse(business.community_tags || '[]')
+                           : []),
+  });
+  const [saving, setSaving] = useState(false);
+  const [error, setError]   = useState('');
+  const [imagePreview, setImagePreview] = useState(business.image_url || '');
+
+  const set = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
+
+  const toggleTag = (tag) =>
+    set('community_tags', form.community_tags.includes(tag)
+      ? form.community_tags.filter(t => t !== tag)
+      : [...form.community_tags, tag]);
+
+  const handleImageUrl = (e) => {
+    set('image_url', e.target.value);
+    setImagePreview(e.target.value);
+  };
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSaving(true);
+    try {
+      let hoursData = form.hours;
+      try { hoursData = JSON.stringify(JSON.parse(form.hours)); } catch { /* keep as-is */ }
+      const res = await businessAPI.update(business.id, { ...form, hours: hoursData });
+      onSaved(res.data.business);
+      onClose();
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to save changes.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="edit-modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="edit-modal">
+        <div className="edit-modal-header">
+          <h2>Edit Business Profile</h2>
+          <button className="edit-modal-close" onClick={onClose} aria-label="Close">✕</button>
+        </div>
+
+        {error && <div className="edit-modal-error">{error}</div>}
+
+        <form onSubmit={handleSave} className="edit-modal-form">
+
+          {/* Basic */}
+          <div className="edit-section">
+            <h3>Basic Information</h3>
+            <div className="edit-form-row">
+              <div className="edit-form-group">
+                <label>Business Name *</label>
+                <input value={form.name} onChange={e => set('name', e.target.value)} required />
+              </div>
+              <div className="edit-form-group">
+                <label>Category *</label>
+                <select value={form.category} onChange={e => set('category', e.target.value)}>
+                  {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="edit-form-group">
+              <label>Description</label>
+              <textarea value={form.description} onChange={e => set('description', e.target.value)} rows={3} />
+            </div>
+          </div>
+
+          {/* Contact */}
+          <div className="edit-section">
+            <h3>Contact Information</h3>
+            <div className="edit-form-row">
+              <div className="edit-form-group">
+                <label>Email</label>
+                <input type="email" value={form.email} onChange={e => set('email', e.target.value)} />
+              </div>
+              <div className="edit-form-group">
+                <label>Phone</label>
+                <input type="tel" value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="(336) 555-0000" />
+              </div>
+              <div className="edit-form-group">
+                <label>Website</label>
+                <input type="url" value={form.website} onChange={e => set('website', e.target.value)} placeholder="https://example.com" />
+              </div>
+            </div>
+          </div>
+
+          {/* Location */}
+          <div className="edit-section">
+            <h3>Location</h3>
+            <div className="edit-form-group">
+              <label>Address *</label>
+              <input value={form.address} onChange={e => set('address', e.target.value)} required />
+            </div>
+            <div className="edit-form-row">
+              <div className="edit-form-group">
+                <label>City *</label>
+                <input value={form.city} onChange={e => set('city', e.target.value)} required />
+              </div>
+              <div className="edit-form-group edit-form-group--sm">
+                <label>State *</label>
+                <input value={form.state} onChange={e => set('state', e.target.value)} maxLength={2} required />
+              </div>
+              <div className="edit-form-group edit-form-group--sm">
+                <label>ZIP *</label>
+                <input value={form.zip_code} onChange={e => set('zip_code', e.target.value)} required />
+              </div>
+            </div>
+          </div>
+
+          {/* Image */}
+          <div className="edit-section">
+            <h3>Business Image</h3>
+            <div className="edit-image-row">
+              <div className="edit-image-preview">
+                {imagePreview
+                  ? <img src={imagePreview} alt="Preview" />
+                  : <span>📸</span>}
+              </div>
+              <div className="edit-form-group" style={{ flex: 1 }}>
+                <label>Image URL</label>
+                <input type="url" value={form.image_url} onChange={handleImageUrl} placeholder="https://example.com/image.jpg" />
+              </div>
+            </div>
+          </div>
+
+          {/* Hours */}
+          <div className="edit-section">
+            <h3>Hours of Operation</h3>
+            <div className="edit-form-group">
+              <label>Hours (JSON)</label>
+              <textarea value={form.hours} onChange={e => set('hours', e.target.value)} rows={4}
+                placeholder='{"Mon-Fri": "9am-5pm", "Sat-Sun": "Closed"}' />
+              <small>{`Format: {"Mon-Fri": "9am-5pm", "Sat": "10am-3pm", "Sun": "Closed"}`}</small>
+            </div>
+          </div>
+
+          {/* Tags */}
+          <div className="edit-section">
+            <h3>Community Tags</h3>
+            <div className="edit-tags-grid">
+              {COMMUNITY_TAG_OPTIONS.map(tag => (
+                <button
+                  key={tag}
+                  type="button"
+                  className={`edit-tag-btn${form.community_tags.includes(tag) ? ' active' : ''}`}
+                  onClick={() => toggleTag(tag)}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="edit-modal-footer">
+            <button type="button" className="bd-btn-ghost" onClick={onClose}>Cancel</button>
+            <button type="submit" className="bd-btn-primary" disabled={saving}>
+              {saving ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 const StarRating = ({ rating }) => {
   const full = Math.floor(rating);
   const half = rating % 1 >= 0.5;
@@ -96,6 +293,7 @@ const BusinessDashboard = () => {
   const [business, setBusiness] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [editOpen, setEditOpen] = useState(false);
 
   useEffect(() => {
     businessAPI.getMy()
@@ -114,7 +312,9 @@ const BusinessDashboard = () => {
 
   const handleReply = async (reviewId, reply) => {
     const res = await reviewAPI.reply(reviewId, reply);
-    setReviews(prev => prev.map(r => r.id === reviewId ? res.data.review : r));
+    setReviews(prev => prev.map(r =>
+      r.id === reviewId ? { ...r, owner_reply: res.data.review.owner_reply } : r
+    ));
   };
 
   const avgRating = reviews.length > 0
@@ -273,12 +473,12 @@ const BusinessDashboard = () => {
               <div className="bd-tab-content">
                 <div className="bd-actions-row">
                   {[
-                    { icon: '✏️', label: 'Edit Profile' },
+                    { icon: '✏️', label: 'Edit Profile', onClick: () => setEditOpen(true) },
                     { icon: '📷', label: 'Add Photos' },
                     { icon: '📣', label: 'Promotions' },
                     { icon: '📊', label: 'Analytics' },
                   ].map(a => (
-                    <button key={a.label} className="bd-action-btn">
+                    <button key={a.label} className="bd-action-btn" onClick={a.onClick}>
                       <span>{a.icon}</span>
                       <span>{a.label}</span>
                     </button>
@@ -353,6 +553,13 @@ const BusinessDashboard = () => {
           </div>
         </div>
       </div>
+      {editOpen && (
+        <EditBusinessModal
+          business={business}
+          onClose={() => setEditOpen(false)}
+          onSaved={(updated) => setBusiness(updated)}
+        />
+      )}
     </DashboardLayout>
   );
 };

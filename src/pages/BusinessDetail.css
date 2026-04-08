@@ -230,6 +230,31 @@
   color: #777;
 }
 
+.owner-reply {
+  margin-top: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: #2a2a2a;
+  border-left: 3px solid #ffd700;
+  border-radius: 0 6px 6px 0;
+}
+
+.owner-reply-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #ffd700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 0.35rem;
+}
+
+.owner-reply p {
+  margin: 0;
+  color: #ccc;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
 .no-reviews {
   text-align: center;
   color: #777;
