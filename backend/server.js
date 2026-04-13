@@ -8,6 +8,7 @@ import addBusinessOwnerIdColumn from './migrations/add_business_owner_id_column.
 import addCommunityTagsColumn from './migrations/add_community_tags_column.js';
 import expandImageUrlColumn from './migrations/expand_image_url_column.js';
 import addBusinessPhotosTable from './migrations/add_business_photos_table.js';
+import addBusinessEventsTable from './migrations/add_business_events_table.js';
 
 // Import routes
 import authRoutes from './routes/auth.js';
@@ -16,6 +17,7 @@ import reviewRoutes from './routes/reviews.js';
 import favoriteRoutes from './routes/favorites.js';
 import adminRoutes from './routes/admin.js';
 import photoRoutes from './routes/photos.js';
+import analyticsRoutes from './routes/analytics.js';
 import { seedGreensboroBusinesses } from './migrations/seed_greensboro_businesses.js';
 
 dotenv.config();
@@ -37,6 +39,7 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
   await addCommunityTagsColumn();
   await expandImageUrlColumn();
   await addBusinessPhotosTable();
+  await addBusinessEventsTable();
   await seedDatabase();
   await seedGreensboroBusinesses();
 })();
@@ -48,6 +51,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/favorites', favoriteRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/photos', photoRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // Root route
 app.get('/', (req, res) => {

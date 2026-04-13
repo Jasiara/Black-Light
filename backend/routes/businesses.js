@@ -290,7 +290,11 @@ router.get('/recommended/for-you', authenticateToken, async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    
+
+    if (!/^\d+$/.test(id)) {
+      return res.status(404).json({ error: 'Business not found' });
+    }
+
     // Get business details
     const businessResult = await pool.query('SELECT * FROM businesses WHERE id = $1', [id]);
     

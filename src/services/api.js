@@ -72,6 +72,12 @@ export const favoriteAPI = {
   remove: (businessId) => api.delete(`/favorites/${businessId}`),
 };
 
+// Analytics endpoints
+export const analyticsAPI = {
+  recordEvent: (business_id, event_type) => api.post('/analytics/event', { business_id, event_type }),
+  getSummary: (businessId) => api.get(`/analytics/summary/${businessId}`),
+};
+
 // Photos endpoints
 export const photosAPI = {
   getByBusiness: (businessId) => api.get(`/photos/${businessId}`),

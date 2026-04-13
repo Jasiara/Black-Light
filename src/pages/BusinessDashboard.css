@@ -951,3 +951,123 @@
 .photos-grid-item:hover .photos-delete-btn {
   opacity: 1;
 }
+
+/* Analytics tab */
+.bd-analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.bd-analytics-card {
+  background: #2a2a2a;
+  border-radius: 12px;
+  padding: 1.25rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.25rem;
+  border: 1px solid #333;
+}
+
+.bd-analytics-icon {
+  font-size: 1.6rem;
+  margin-bottom: 0.25rem;
+}
+
+.bd-analytics-value {
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: #ffd700;
+  line-height: 1;
+}
+
+.bd-analytics-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #e0e0e0;
+}
+
+.bd-analytics-sub {
+  font-size: 0.73rem;
+  color: #888;
+}
+
+/* Sparkline chart */
+.bd-sparkline {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 80px;
+  padding-bottom: 1.5rem;
+  position: relative;
+  margin-top: 0.5rem;
+}
+
+.bd-sparkline-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+  position: relative;
+}
+
+.bd-sparkline-bar {
+  width: 100%;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border-radius: 3px 3px 0 0;
+  min-height: 4px;
+  transition: opacity 0.2s;
+}
+
+.bd-sparkline-col:hover .bd-sparkline-bar {
+  opacity: 0.75;
+}
+
+.bd-sparkline-label {
+  position: absolute;
+  bottom: -1.4rem;
+  font-size: 0.6rem;
+  color: #888;
+  white-space: nowrap;
+}
+
+/* Engagement breakdown */
+.bd-engage-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.bd-engage-label {
+  width: 110px;
+  font-size: 0.85rem;
+  color: #ccc;
+  flex-shrink: 0;
+}
+
+.bd-engage-track {
+  flex: 1;
+  height: 8px;
+  background: #333;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.bd-engage-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.6s ease;
+}
+
+.bd-engage-count {
+  width: 32px;
+  text-align: right;
+  font-size: 0.85rem;
+  color: #e0e0e0;
+  font-weight: 600;
+}

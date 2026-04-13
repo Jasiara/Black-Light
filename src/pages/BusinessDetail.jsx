@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Heart, MapPin, Phone, Mail, Globe, Star } from 'lucide-react';
-import { businessAPI, reviewAPI, favoriteAPI, photosAPI } from '../services/api';
+import { businessAPI, reviewAPI, favoriteAPI, photosAPI, analyticsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import Map from '../components/Map';
@@ -38,9 +38,9 @@ const BusinessDetail = () => {
   useEffect(() => {
     setLoading(true);
     loadBusiness();
-    photosAPI.getByBusiness(id)
-      .then(r => setPhotos(r.data.photos || []))
-      .catch(() => {});
+    photosAPI.getByBusiness(id).then(r => setPhotos(r.data.photos || [])).catch(() => {});
+    // Record visit — fire and forget, ignore errors
+    analyticsAPI.recordEvent(id, 'visit').catch(() => {});
   }, [id]);
 
   const loadBusiness = async () => {
@@ -200,7 +200,12 @@ const BusinessDetail = () => {
               {business.website && (
                 <p>
                   <Globe size={14} />
-                  <a href={business.website} target="_blank" rel="noopener noreferrer">Visit Website</a>
+                  <a
+                    href={business.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => analyticsAPI.recordEvent(id, 'website_click').catch(() => {})}
+                  >Visit Website</a>
                 </p>
               )}
             </section>

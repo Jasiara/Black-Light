@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '../components/dashboard/DashboardLayout';
-import { businessAPI, reviewAPI, photosAPI } from '../services/api';
+import { businessAPI, reviewAPI, photosAPI, analyticsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import BusinessDetailsForm from '../components/BusinessDetailsForm';
 import HoursEditor from '../components/HoursEditor';
@@ -421,6 +421,7 @@ const BusinessDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
   const [photosOpen, setPhotosOpen] = useState(false);
+  const [analytics, setAnalytics] = useState(null);
 
   useEffect(() => {
     businessAPI.getMy()
@@ -596,7 +597,7 @@ const BusinessDashboard = () => {
           {/* Main */}
           <div className="bd-main">
             <div className="bd-tabs">
-              {['overview', 'reviews', 'insights'].map(tab => (
+              {['overview', 'reviews', 'insights', 'analytics'].map(tab => (
                 <button
                   key={tab}
                   className={`bd-tab${activeTab === tab ? ' bd-tab--active' : ''}`}
@@ -614,7 +615,14 @@ const BusinessDashboard = () => {
                     { icon: '✏️', label: 'Edit Profile', onClick: () => setEditOpen(true) },
                     { icon: '📷', label: 'Add Photos', onClick: () => setPhotosOpen(true) },
                     { icon: '📣', label: 'Promotions' },
-                    { icon: '📊', label: 'Analytics' },
+                    { icon: '📊', label: 'Analytics', onClick: () => {
+                      setActiveTab('analytics');
+                      if (!analytics) {
+                        analyticsAPI.getSummary(business.id)
+                          .then(r => setAnalytics(r.data))
+                          .catch(() => {});
+                      }
+                    }},
                   ].map(a => (
                     <button key={a.label} className="bd-action-btn" onClick={a.onClick}>
                       <span>{a.icon}</span>
@@ -653,6 +661,86 @@ const BusinessDashboard = () => {
                       ))
                   }
                 </div>
+              </div>
+            )}
+
+            {activeTab === 'analytics' && (
+              <div className="bd-tab-content">
+                {!analytics ? (
+                  <p className="bd-empty-text">Loading analytics…</p>
+                ) : (
+                  <>
+                    <div className="bd-analytics-grid">
+                      {[
+                        { icon: '👁️', value: analytics.visits, label: 'Total Page Visits', sub: `${analytics.this_week_visits} this week` },
+                        { icon: '❤️', value: analytics.favorites, label: 'Times Favorited', sub: 'By all users' },
+                        { icon: '🌐', value: analytics.website_clicks, label: 'Website Link Clicks', sub: 'Outbound clicks' },
+                        { icon: '⭐', value: analytics.avg_rating ?? '—', label: 'Average Rating', sub: `From ${analytics.review_count} reviews` },
+                        { icon: '💬', value: analytics.review_count, label: 'Total Reviews', sub: 'Customer reviews' },
+                        {
+                          icon: '📈',
+                          value: analytics.last_week_visits > 0
+                            ? `${analytics.this_week_visits > analytics.last_week_visits ? '+' : ''}${Math.round(((analytics.this_week_visits - analytics.last_week_visits) / analytics.last_week_visits) * 100)}%`
+                            : analytics.this_week_visits > 0 ? 'New!' : '—',
+                          label: 'Visit Trend',
+                          sub: 'This week vs last week',
+                        },
+                      ].map(s => (
+                        <div key={s.label} className="bd-analytics-card">
+                          <span className="bd-analytics-icon">{s.icon}</span>
+                          <span className="bd-analytics-value">{s.value}</span>
+                          <span className="bd-analytics-label">{s.label}</span>
+                          <span className="bd-analytics-sub">{s.sub}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {analytics.visits_by_day.length > 0 && (
+                      <div className="bd-card" style={{ marginTop: '1.5rem' }}>
+                        <h3 className="bd-card-title">Visits — Last 30 Days</h3>
+                        <div className="bd-sparkline">
+                          {(() => {
+                            const max = Math.max(...analytics.visits_by_day.map(d => d.count), 1);
+                            return analytics.visits_by_day.map((d, i) => (
+                              <div key={i} className="bd-sparkline-col" title={`${d.day}: ${d.count} visits`}>
+                                <div
+                                  className="bd-sparkline-bar"
+                                  style={{ height: `${Math.max(4, (d.count / max) * 100)}%` }}
+                                />
+                                {i % 7 === 0 && (
+                                  <span className="bd-sparkline-label">
+                                    {new Date(d.day).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                  </span>
+                                )}
+                              </div>
+                            ));
+                          })()}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="bd-card" style={{ marginTop: '1.5rem' }}>
+                      <h3 className="bd-card-title">Engagement Breakdown</h3>
+                      {[
+                        { label: 'Page Visits', count: analytics.visits, color: '#667eea' },
+                        { label: 'Favorites', count: analytics.favorites, color: '#f59e0b' },
+                        { label: 'Website Clicks', count: analytics.website_clicks, color: '#10b981' },
+                      ].map(row => {
+                        const total = analytics.visits + analytics.favorites + analytics.website_clicks || 1;
+                        const pct = Math.round((row.count / total) * 100);
+                        return (
+                          <div key={row.label} className="bd-engage-row">
+                            <span className="bd-engage-label">{row.label}</span>
+                            <div className="bd-engage-track">
+                              <div className="bd-engage-fill" style={{ width: `${pct}%`, background: row.color }} />
+                            </div>
+                            <span className="bd-engage-count">{row.count}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
               </div>
             )}
 
