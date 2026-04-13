@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { businessAPI } from '../services/api';
+import HoursEditor from './HoursEditor';
 import './BusinessDetailsForm.css';
 
 const BusinessDetailsForm = ({ onSuccess, loading: parentLoading, prefill = {} }) => {
@@ -111,11 +112,9 @@ const BusinessDetailsForm = ({ onSuccess, loading: parentLoading, prefill = {} }
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result);
-        // For now, just show preview - actual upload would require backend file storage
-        // Store a placeholder or filename instead of base64
         setFormData(prev => ({
           ...prev,
-          image_url: file.name // Store filename as placeholder
+          image_url: reader.result
         }));
       };
       reader.readAsDataURL(file);
@@ -393,40 +392,46 @@ const BusinessDetailsForm = ({ onSuccess, loading: parentLoading, prefill = {} }
                     accept="image/*"
                     onChange={handleImageChange}
                   />
+                  {formData.image_url.startsWith('data:') && (
+                    <button
+                      type="button"
+                      className="remove-image-btn"
+                      onClick={() => {
+                        setImagePreview('');
+                        setFormData(prev => ({ ...prev, image_url: '' }));
+                        document.getElementById('imageFile').value = '';
+                      }}
+                    >
+                      ✕ Remove image
+                    </button>
+                  )}
                 </div>
 
-                <p className="or-text">OR</p>
+                {!formData.image_url.startsWith('data:') && <p className="or-text">OR</p>}
 
-                <div className="form-group">
-                  <label htmlFor="image_url">Image URL</label>
-                  <input
-                    type="url"
-                    id="image_url"
-                    name="image_url"
-                    value={formData.image_url}
-                    onChange={handleImageUrlChange}
-                    placeholder="https://example.com/image.jpg"
-                  />
-                </div>
+                {!formData.image_url.startsWith('data:') && (
+                  <div className="form-group">
+                    <label htmlFor="image_url">Image URL</label>
+                    <input
+                      type="text"
+                      id="image_url"
+                      name="image_url"
+                      value={formData.image_url}
+                      onChange={handleImageUrlChange}
+                      placeholder="https://example.com/image.jpg"
+                    />
+                  </div>
+                )}
               </div>
             </div>
           </div>
 
           <div className="form-section">
             <h3>Hours of Operation</h3>
-
-            <div className="form-group">
-              <label htmlFor="hours">Hours (JSON format)</label>
-              <textarea
-                id="hours"
-                name="hours"
-                value={formData.hours}
-                onChange={handleChange}
-                rows="4"
-                placeholder='{"Mon-Fri": "9am-5pm", "Sat-Sun": "Closed"}'
-              />
-              <small>Format as JSON, e.g., {`{"Mon-Fri": "9am-5pm", "Sat": "10am-6pm", "Sun": "Closed"}`}</small>
-            </div>
+            <HoursEditor
+              value={formData.hours}
+              onChange={(hoursJson) => setFormData(prev => ({ ...prev, hours: hoursJson }))}
+            />
           </div>
 
           <div className="form-section">

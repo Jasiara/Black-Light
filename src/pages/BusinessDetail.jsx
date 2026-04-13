@@ -1,12 +1,25 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Heart, MapPin, Phone, Mail, Globe, Star } from 'lucide-react';
-import { businessAPI, reviewAPI, favoriteAPI } from '../services/api';
+import { businessAPI, reviewAPI, favoriteAPI, photosAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import Map from '../components/Map';
 import SkeletonCard from '../components/SkeletonCard';
 import './BusinessDetail.css';
+
+const DAY_ORDER = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+const formatHoursTime = (timeStr) => {
+  // Converts "09:00 - 17:30" → "9:00 AM - 5:30 PM", passes through "Closed" unchanged
+  if (!timeStr || timeStr === 'Closed') return timeStr;
+  return timeStr.replace(/(\d{1,2}):(\d{2})/g, (_, h, m) => {
+    const hour = parseInt(h, 10);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const h12 = hour % 12 || 12;
+    return `${h12}:${m} ${ampm}`;
+  });
+};
 
 const BusinessDetail = () => {
   const { id } = useParams();
@@ -14,15 +27,20 @@ const BusinessDetail = () => {
   const { isAuthenticated, user } = useAuth();
   const { showToast } = useToast();
   const [business, setBusiness] = useState(null);
+  const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const [submittingReview, setSubmittingReview] = useState(false);
+  const [lightboxSrc, setLightboxSrc] = useState(null);
 
   useEffect(() => {
     setLoading(true);
     loadBusiness();
+    photosAPI.getByBusiness(id)
+      .then(r => setPhotos(r.data.photos || []))
+      .catch(() => {});
   }, [id]);
 
   const loadBusiness = async () => {
@@ -141,6 +159,27 @@ const BusinessDetail = () => {
               <p>{business.description}</p>
             </section>
 
+            {photos.length > 0 && (
+              <section className="info-section">
+                <h2>Photos</h2>
+                <div className="detail-photos-grid">
+                  {photos.map(photo => (
+                    <div key={photo.id} className="detail-photo-item" onClick={() => setLightboxSrc(photo.image_url)}>
+                      <img src={photo.image_url} alt={photo.caption || 'Business photo'} />
+                      {photo.caption && <p className="detail-photo-caption">{photo.caption}</p>}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {lightboxSrc && (
+              <div className="detail-lightbox" onClick={() => setLightboxSrc(null)}>
+                <img src={lightboxSrc} alt="Full size" />
+                <button className="detail-lightbox-close" onClick={() => setLightboxSrc(null)}>✕</button>
+              </div>
+            )}
+
             {business.community_tags && business.community_tags.length > 0 && (
               <section className="info-section">
                 <h2>Community Tags</h2>
@@ -169,9 +208,15 @@ const BusinessDetail = () => {
             {Object.keys(hours).length > 0 && (
               <section className="info-section">
                 <h2>Hours</h2>
-                {Object.entries(hours).map(([day, time]) => (
-                  <p key={day}><strong>{day}:</strong> {time}</p>
-                ))}
+                {Object.entries(hours)
+                  .sort(([a], [b]) => {
+                    const ai = DAY_ORDER.indexOf(a);
+                    const bi = DAY_ORDER.indexOf(b);
+                    return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+                  })
+                  .map(([day, time]) => (
+                    <p key={day}><strong>{day}:</strong> {formatHoursTime(time)}</p>
+                  ))}
               </section>
             )}
 

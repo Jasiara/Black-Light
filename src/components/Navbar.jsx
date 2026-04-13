@@ -49,9 +49,6 @@ const Navbar = () => {
                   <Link to="/business/settings" className={`nav-link ${isActive('/business/settings') ? 'nav-link--active' : ''}`}>
                     ⚙️ Settings
                   </Link>
-                  <Link to="/business/profile" className={`nav-link ${isActive('/business/profile') ? 'nav-link--active' : ''}`}>
-                    👤 Profile
-                  </Link>
                 </>
               )}
               {isAdmin && (

@@ -9,6 +9,8 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  maxBodyLength: 52428800, // 50mb
+  maxContentLength: 52428800,
 });
 
 // Add token to requests if available
@@ -19,6 +21,18 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
+
+// On 401, clear stale token and redirect to login
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
 
 // Auth endpoints
 export const authAPI = {
@@ -56,6 +70,13 @@ export const favoriteAPI = {
   getAll: () => api.get('/favorites'),
   add: (businessId) => api.post('/favorites', { business_id: businessId }),
   remove: (businessId) => api.delete(`/favorites/${businessId}`),
+};
+
+// Photos endpoints
+export const photosAPI = {
+  getByBusiness: (businessId) => api.get(`/photos/${businessId}`),
+  add: (data) => api.post('/photos', data),
+  remove: (photoId) => api.delete(`/photos/${photoId}`),
 };
 
 // Admin endpoints

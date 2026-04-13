@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '../components/dashboard/DashboardLayout';
-import { businessAPI, reviewAPI } from '../services/api';
+import { businessAPI, reviewAPI, photosAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import BusinessDetailsForm from '../components/BusinessDetailsForm';
+import HoursEditor from '../components/HoursEditor';
 import './BusinessDashboard.css';
 
 const CATEGORIES = [
@@ -52,6 +53,18 @@ const EditBusinessModal = ({ business, onClose, onSaved }) => {
   const handleImageUrl = (e) => {
     set('image_url', e.target.value);
     setImagePreview(e.target.value);
+  };
+
+  const handleImageFile = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+        set('image_url', reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleSave = async (e) => {
@@ -155,9 +168,16 @@ const EditBusinessModal = ({ business, onClose, onSaved }) => {
                   ? <img src={imagePreview} alt="Preview" />
                   : <span>📸</span>}
               </div>
-              <div className="edit-form-group" style={{ flex: 1 }}>
-                <label>Image URL</label>
-                <input type="url" value={form.image_url} onChange={handleImageUrl} placeholder="https://example.com/image.jpg" />
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <div className="edit-form-group">
+                  <label>Upload Image</label>
+                  <input type="file" accept="image/*" onChange={handleImageFile} />
+                </div>
+                <p style={{ margin: 0, textAlign: 'center', color: '#888', fontSize: '0.85rem' }}>OR</p>
+                <div className="edit-form-group">
+                  <label>Image URL</label>
+                  <input type="url" value={form.image_url.startsWith('data:') ? '' : form.image_url} onChange={handleImageUrl} placeholder="https://example.com/image.jpg" />
+                </div>
               </div>
             </div>
           </div>
@@ -165,12 +185,10 @@ const EditBusinessModal = ({ business, onClose, onSaved }) => {
           {/* Hours */}
           <div className="edit-section">
             <h3>Hours of Operation</h3>
-            <div className="edit-form-group">
-              <label>Hours (JSON)</label>
-              <textarea value={form.hours} onChange={e => set('hours', e.target.value)} rows={4}
-                placeholder='{"Mon-Fri": "9am-5pm", "Sat-Sun": "Closed"}' />
-              <small>{`Format: {"Mon-Fri": "9am-5pm", "Sat": "10am-3pm", "Sun": "Closed"}`}</small>
-            </div>
+            <HoursEditor
+              value={form.hours}
+              onChange={(hoursJson) => set('hours', hoursJson)}
+            />
           </div>
 
           {/* Tags */}
@@ -287,6 +305,114 @@ const ReviewItem = ({ review, onReplySubmit }) => {
   );
 };
 
+const formatHoursTime = (timeStr) => {
+  if (!timeStr || timeStr === 'Closed') return timeStr;
+  return timeStr.replace(/(\d{1,2}):(\d{2})/g, (_, h, m) => {
+    const hour = parseInt(h, 10);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const h12 = hour % 12 || 12;
+    return `${h12}:${m} ${ampm}`;
+  });
+};
+
+const AddPhotosModal = ({ business, onClose }) => {
+  const [photos, setPhotos] = useState([]);
+  const [preview, setPreview] = useState(null);
+  const [imageData, setImageData] = useState('');
+  const [caption, setCaption] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    photosAPI.getByBusiness(business.id)
+      .then(r => setPhotos(r.data.photos || []))
+      .catch(() => {});
+  }, [business.id]);
+
+  const handleFile = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreview(reader.result);
+      setImageData(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleUpload = async () => {
+    if (!imageData) { setError('Please select an image first.'); return; }
+    setError('');
+    setUploading(true);
+    try {
+      const res = await photosAPI.add({ business_id: business.id, image_url: imageData, caption });
+      setPhotos(prev => [res.data.photo, ...prev]);
+      setPreview(null);
+      setImageData('');
+      setCaption('');
+      document.getElementById('photo-file-input').value = '';
+    } catch {
+      setError('Failed to upload photo. Please try again.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDelete = async (photoId) => {
+    try {
+      await photosAPI.remove(photoId);
+      setPhotos(prev => prev.filter(p => p.id !== photoId));
+    } catch {
+      setError('Failed to delete photo.');
+    }
+  };
+
+  return (
+    <div className="edit-modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="edit-modal">
+        <div className="edit-modal-header">
+          <h2>Manage Photos</h2>
+          <button className="edit-modal-close" onClick={onClose}>✕</button>
+        </div>
+
+        {error && <div className="edit-modal-error">{error}</div>}
+
+        <div className="photos-upload-area">
+          <div className="photos-file-row">
+            <input type="file" id="photo-file-input" accept="image/*" onChange={handleFile} />
+            <input
+              type="text"
+              className="photos-caption-input"
+              placeholder="Caption (optional)"
+              value={caption}
+              onChange={e => setCaption(e.target.value)}
+            />
+          </div>
+          {preview && (
+            <img src={preview} alt="Preview" className="photos-preview" />
+          )}
+          <button className="bd-btn-primary photos-upload-btn" onClick={handleUpload} disabled={uploading || !imageData}>
+            {uploading ? 'Uploading...' : 'Upload Photo'}
+          </button>
+        </div>
+
+        <div className="photos-grid">
+          {photos.length === 0
+            ? <p className="bd-empty-text">No photos yet.</p>
+            : photos.map(photo => (
+              <div key={photo.id} className="photos-grid-item">
+                <img src={photo.image_url} alt={photo.caption || 'Business photo'} />
+                {photo.caption && <p className="photos-caption">{photo.caption}</p>}
+                <button className="photos-delete-btn" onClick={() => handleDelete(photo.id)}>✕</button>
+              </div>
+            ))
+          }
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const BusinessDashboard = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
@@ -294,6 +420,7 @@ const BusinessDashboard = () => {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
+  const [photosOpen, setPhotosOpen] = useState(false);
 
   useEffect(() => {
     businessAPI.getMy()
@@ -306,7 +433,12 @@ const BusinessDashboard = () => {
             .catch(() => setReviews([]));
         }
       })
-      .catch(() => setBusiness(null))
+      .catch((err) => {
+        // Don't show the creation form on auth errors — the interceptor handles redirect
+        if (err.response?.status !== 401) {
+          setBusiness(null);
+        }
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -323,11 +455,17 @@ const BusinessDashboard = () => {
 
   const repliedCount = reviews.filter(r => r.owner_reply).length;
 
+  const DAY_ORDER = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
   const parseHours = (hours) => {
     if (!hours) return [];
     try {
       const h = typeof hours === 'string' ? JSON.parse(hours) : hours;
-      return Object.entries(h);
+      return Object.entries(h).sort(([a], [b]) => {
+        const ai = DAY_ORDER.indexOf(a);
+        const bi = DAY_ORDER.indexOf(b);
+        return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+      });
     } catch { return []; }
   };
 
@@ -431,7 +569,7 @@ const BusinessDashboard = () => {
                   {parseHours(business.hours).map(([days, time]) => (
                     <div key={days} className="bd-hours-row">
                       <span className="bd-hours-days">{days}</span>
-                      <span className="bd-hours-time">{time}</span>
+                      <span className="bd-hours-time">{formatHoursTime(time)}</span>
                     </div>
                   ))}
                 </div>
@@ -474,7 +612,7 @@ const BusinessDashboard = () => {
                 <div className="bd-actions-row">
                   {[
                     { icon: '✏️', label: 'Edit Profile', onClick: () => setEditOpen(true) },
-                    { icon: '📷', label: 'Add Photos' },
+                    { icon: '📷', label: 'Add Photos', onClick: () => setPhotosOpen(true) },
                     { icon: '📣', label: 'Promotions' },
                     { icon: '📊', label: 'Analytics' },
                   ].map(a => (
@@ -558,6 +696,12 @@ const BusinessDashboard = () => {
           business={business}
           onClose={() => setEditOpen(false)}
           onSaved={(updated) => setBusiness(updated)}
+        />
+      )}
+      {photosOpen && (
+        <AddPhotosModal
+          business={business}
+          onClose={() => setPhotosOpen(false)}
         />
       )}
     </DashboardLayout>

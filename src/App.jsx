@@ -19,11 +19,16 @@ import './App.css';
 
 function AppContent() {
   const location = useLocation();
-  const [showLanding, setShowLanding] = useState(true);
+  const [showLanding, setShowLanding] = useState(
+    () => !sessionStorage.getItem('landingSeen')
+  );
 
   return (
     <div className="app">
-      {showLanding && <LandingOverlay onComplete={() => setShowLanding(false)} />}
+      {showLanding && <LandingOverlay onComplete={() => {
+        sessionStorage.setItem('landingSeen', '1');
+        setShowLanding(false);
+      }} />}
       <ScrollToTop />
       <Navbar />
       <main>

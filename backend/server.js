@@ -6,6 +6,8 @@ import { addInterestsColumn } from './migrations/add_interests_column.js';
 import addUserTypeColumn from './migrations/add_user_type_column.js';
 import addBusinessOwnerIdColumn from './migrations/add_business_owner_id_column.js';
 import addCommunityTagsColumn from './migrations/add_community_tags_column.js';
+import expandImageUrlColumn from './migrations/expand_image_url_column.js';
+import addBusinessPhotosTable from './migrations/add_business_photos_table.js';
 
 // Import routes
 import authRoutes from './routes/auth.js';
@@ -13,6 +15,7 @@ import businessRoutes from './routes/businesses.js';
 import reviewRoutes from './routes/reviews.js';
 import favoriteRoutes from './routes/favorites.js';
 import adminRoutes from './routes/admin.js';
+import photoRoutes from './routes/photos.js';
 import { seedGreensboroBusinesses } from './migrations/seed_greensboro_businesses.js';
 
 dotenv.config();
@@ -22,8 +25,8 @@ const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Initialize database
 (async () => {
@@ -32,6 +35,8 @@ app.use(express.urlencoded({ extended: true }));
   await addUserTypeColumn();
   await addBusinessOwnerIdColumn();
   await addCommunityTagsColumn();
+  await expandImageUrlColumn();
+  await addBusinessPhotosTable();
   await seedDatabase();
   await seedGreensboroBusinesses();
 })();
@@ -42,6 +47,7 @@ app.use('/api/businesses', businessRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/favorites', favoriteRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/photos', photoRoutes);
 
 // Root route
 app.get('/', (req, res) => {

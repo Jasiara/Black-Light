@@ -83,7 +83,9 @@ const Favorites = () => {
                   <h3 onClick={() => navigate(`/business/${business.id}`)}>
                     {business.name}
                   </h3>
-                  <span className="favorite-category">{business.category}</span>
+                  <div className="category-tags-row">
+                    <span className="favorite-category">{business.category}</span>
+                  </div>
                   <p className="favorite-description">{business.description}</p>
                   <p className="favorite-location">
                     <MapPin size={13} /> {business.city}, {business.state}

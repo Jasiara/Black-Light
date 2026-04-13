@@ -58,6 +58,34 @@
 }
 
 /* Businesses List */
+.businesses-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.businesses-list-header h2 {
+  margin: 0;
+  color: #333;
+}
+
+.admin-search {
+  padding: 0.6rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  width: 280px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.admin-search:focus {
+  border-color: #7300ff;
+}
+
 .businesses-list h2,
 .users-list h2,
 .reviews-list h2 {

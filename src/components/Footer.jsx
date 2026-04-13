@@ -10,7 +10,7 @@ const Footer = () => {
         <div className="footer-content">
           {/* Brand Section */}
           <div className="footer-section">
-            <h3 className="footer-brand">Black-Light</h3>
+            <h3 className="footer-brand">Black Light</h3>
             <p className="footer-tagline">Discover and support Black-owned businesses in your community.</p>
             <div className="social-links">
               <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="social-icon">
@@ -78,7 +78,7 @@ const Footer = () => {
 
         {/* Footer Bottom */}
         <div className="footer-bottom">
-          <p>&copy; {currentYear} Black-Light. All rights reserved. Empowering Black-owned businesses.</p>
+          <p>&copy; {currentYear} Black Light. All rights reserved. Empowering Black-owned businesses.</p>
         </div>
       </div>
     </footer>

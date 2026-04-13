@@ -147,17 +147,6 @@ router.post('/', authenticateToken, async (req, res) => {
       }
     }
 
-    // Limit image_url to prevent data issues (max 500 chars for VARCHAR)
-    if (image_url && image_url.length > 500) {
-      console.warn('image_url exceeds 500 chars, truncating or removing');
-      if (image_url.startsWith('data:')) {
-        // Base64 image too large, don't store it
-        image_url = null;
-      } else {
-        image_url = image_url.substring(0, 500);
-      }
-    }
-
     // Create business
     const result = await pool.query(
       `INSERT INTO businesses (business_owner_id, name, category, description, address, city, state, zip_code, phone, email, website, hours, latitude, longitude, image_url, community_tags)
@@ -385,7 +374,7 @@ router.post('/', authenticateToken, async (req, res) => {
 router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const {
+    let {
       name,
       category,
       description,
@@ -399,7 +388,8 @@ router.put('/:id', authenticateToken, async (req, res) => {
       hours,
       latitude,
       longitude,
-      image_url
+      image_url,
+      community_tags
     } = req.body;
 
     // Check if business exists
@@ -408,8 +398,23 @@ router.put('/:id', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'Business not found' });
     }
 
+    // hours arrives as a pre-serialized JSON string from the frontend;
+    // pass it directly so PostgreSQL parses it as JSONB (no double-stringify)
+    let hoursValue = null;
+    if (hours) {
+      hoursValue = typeof hours === 'string' ? hours : JSON.stringify(hours);
+    }
+
+    // Parse community_tags
+    let tagsData = null;
+    if (community_tags !== undefined) {
+      tagsData = Array.isArray(community_tags)
+        ? JSON.stringify(community_tags)
+        : (typeof community_tags === 'string' ? community_tags : null);
+    }
+
     const result = await pool.query(
-      `UPDATE businesses 
+      `UPDATE businesses
        SET name = COALESCE($1, name),
            category = COALESCE($2, category),
            description = COALESCE($3, description),
@@ -424,11 +429,12 @@ router.put('/:id', authenticateToken, async (req, res) => {
            latitude = COALESCE($12, latitude),
            longitude = COALESCE($13, longitude),
            image_url = COALESCE($14, image_url),
+           community_tags = COALESCE($15, community_tags),
            updated_at = CURRENT_TIMESTAMP
-       WHERE id = $15
+       WHERE id = $16
        RETURNING *`,
       [name, category, description, address, city, state, zip_code, phone, email, website,
-       hours ? JSON.stringify(hours) : null, latitude, longitude, image_url, id]
+       hoursValue, latitude, longitude, image_url, tagsData, id]
     );
 
     res.json({
@@ -437,7 +443,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
     });
   } catch (error) {
     console.error('Update business error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 

@@ -14,6 +14,7 @@ const AdminPage = () => {
   const [loading, setLoading] = useState(true);
   const [editingBusiness, setEditingBusiness] = useState(null);
   const [editForm, setEditForm] = useState({});
+  const [businessSearch, setBusinessSearch] = useState('');
 
   useEffect(() => {
     if (!isAdmin) {
@@ -156,8 +157,26 @@ const AdminPage = () => {
           <>
             {activeTab === 'businesses' && (
               <div className="businesses-list">
-                <h2>Manage Businesses</h2>
-                {businesses.map(business => (
+                <div className="businesses-list-header">
+                  <h2>Manage Businesses</h2>
+                  <input
+                    type="text"
+                    className="admin-search"
+                    placeholder="Search by name, category, or city..."
+                    value={businessSearch}
+                    onChange={(e) => setBusinessSearch(e.target.value)}
+                  />
+                </div>
+                {businesses
+                  .filter(b => {
+                    const q = businessSearch.toLowerCase();
+                    return (
+                      b.name?.toLowerCase().includes(q) ||
+                      b.category?.toLowerCase().includes(q) ||
+                      b.city?.toLowerCase().includes(q)
+                    );
+                  })
+                  .map(business => (
                   <div key={business.id} className="admin-card">
                     {editingBusiness === business.id ? (
                       <div className="edit-form">
@@ -270,7 +289,7 @@ const AdminPage = () => {
                       </>
                     )}
                   </div>
-                ))}
+                  ))}
               </div>
             )}
 
